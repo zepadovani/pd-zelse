@@ -1,14 +1,12 @@
 # IMPORTANTE
 
-Essa bibloteca é provisória. A ideia é que os objetos todos sejam integrados à else.
-Por enquanto estou usando dessa maneira porque o plugdata, por ter o else integrado, não permite estendê-lo sem confiltos.
-A solução (maluca) foi criar versões dos objetos que preciso com um 'z' na frente.
-A mesma coisa para a biblioteca toda, que chama 'zelse'
+Essa bibloteca é provisória e inclui apenas uma parte muito pequena dos objetos da else alterados.
 
+A ideia é que os objetos, sem a nomenclatura estranha que criei, sejam integrados à else (Pull Request já foi feito). Por enquanto estou usando dessa maneira **porque o plugdata, por ter o else integrado, não permite estendê-lo sem confiltos** e tenho urgência em ter uma solução portável a ele.
 
+A solução (maluca), portanto, foi criar versões dos objetos que preciso com um 'z' na frente. A mesma coisa para a biblioteca toda (o libshared que é carregado), que chama 'zelse'. Foram necessárias mudanças assim nos objetos e no buffer.c.
 
-
-
+25/03/2025
 
 
 

@@ -1,1 +1,0 @@
-/usr/bin/cc -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/ztabwriter_tilde.dir/link.d -shared -Wl,-soname,"ztabwriter~.l_amd64" -o "zelse/ztabwriter~.l_amd64" "CMakeFiles/ztabwriter_tilde.dir/Source/Audio/ztabwriter~.c.o"  -Wl,-rpath,"\$ORIGIN:/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/zelse" zelse/libzelse_shared.so
