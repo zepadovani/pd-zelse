@@ -16,7 +16,7 @@
 #X text 30 91 If more than one channel is set \, the name convention for multi channel arrays is the table name preceded by the channel number (starting from zero) and "-" \, such as: "0-" \, "1-" \, "2-" \, "3-" \, and so on...;
 #X obj 101 237 else/sample~ stereo_\$0 stereo.wav;
 #X msg 101 209 show;
-#X obj 131 325 else/tabplayer~ stereo_\$0 2;
+#X obj 131 325 zelse/ztabplayer~ stereo_\$0 2;
 #X obj 127 357 else/out~;
 #X text 31 152 You can manually set multi channel arrays in Pd like that or use the [sample~] object \, which does this internally.;
 #X text 48 444 If the [sample~] object has fewer channels than the number of output channels in [tabplayer~] \, the extra channels output a zero signal.;
@@ -44,14 +44,14 @@
 #X obj 367 188 bng 22 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
 #N canvas 735 82 384 502 signal 0;
 #X obj 115 427 else/out~;
-#X obj 115 392 else/tabplayer~ -tr \$0-violin;
+#X obj 115 392 zelse/ztabplayer~ -tr \$0-violin;
 #X obj 115 326 bng 17 250 50 0 empty empty empty 17 7 0 10 #dfdfdf #000000 #000000;
 #X obj 286 420 bng 17 250 50 0 empty empty empty 17 7 0 10 #dfdfdf #000000 #000000;
 #X text 32 16 A signal input is used to play the table at the audio rate. By default we have a 'gate' mode \, where it works just like a toggle (non zero starts playing \, zero stops)., f 53;
 #X obj 118 240 else/out~;
 #X obj 265 233 bng 17 250 50 0 empty empty empty 17 7 0 10 #dfdfdf #000000 #000000;
 #X obj 118 173 else/pulse~ 0.5;
-#X obj 118 205 else/tabplayer~ \$0-violin;
+#X obj 118 205 zelse/ztabplayer~ \$0-violin;
 #X msg 71 173 tr \$1;
 #X obj 71 147 tgl 17 0 empty empty empty 17 7 0 10 #dfdfdf #000000 #000000 0 1;
 #X obj 115 359 else/float2imp~;
@@ -93,7 +93,7 @@
 #X restore 2 4 graph;
 #X obj 220 186 else/out~;
 #X text 180 654 - table name (optional), f 61;
-#X obj 220 164 else/tabplayer~ \$0-violin;
+#X obj 220 164 zelse/ztabplayer~ \$0-violin;
 #N canvas 961 51 405 507 loop 0;
 #X msg 149 207 loop \$1;
 #X obj 149 176 tgl 15 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000 0 1;
@@ -101,12 +101,12 @@
 #X obj 288 396 bng 25 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
 #X msg 65 149 stop;
 #X obj 149 117 loadbang;
-#X obj 149 246 else/tabplayer~ \$0-violin;
+#X obj 149 246 zelse/ztabplayer~ \$0-violin;
 #X obj 149 281 else/out~;
 #X obj 105 412 else/out~;
 #X msg 105 149 play;
 #X text 68 34 The loop message takes a float \, where a non-zero value enables looping and \, 0 disables it (default is disabled). You can set it to loop with the -loop flag., f 37;
-#X obj 105 358 else/tabplayer~ -loop \$0-violin;
+#X obj 105 358 zelse/ztabplayer~ -loop \$0-violin;
 #X connect 0 0 6 0;
 #X connect 1 0 0 0;
 #X connect 4 0 6 0;
@@ -143,9 +143,9 @@
 #X text 37 21 Basic control messages:;
 #X obj 227 411 bng 25 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
 #X obj 568 387 bng 25 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
-#X obj 80 372 else/tabplayer~ \$0-violin;
+#X obj 80 372 zelse/ztabplayer~ \$0-violin;
 #X obj 80 410 else/out~;
-#X obj 421 349 else/tabplayer~ \$0-violin;
+#X obj 421 349 zelse/ztabplayer~ \$0-violin;
 #X obj 421 387 else/out~;
 #X text 503 197 play half second from 250 ms;
 #X text 66 58 'non zero' plays the array \, zero stops;
@@ -218,7 +218,7 @@
 #X text 179 372 - sets position proportionally within range (from 0 to 1), f 61;
 #N canvas 831 215 535 507 pos 0;
 #X obj 339 393 bng 25 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
-#X obj 192 354 else/tabplayer~ \$0-violin;
+#X obj 192 354 zelse/ztabplayer~ \$0-violin;
 #X obj 192 392 else/out~;
 #X msg 215 247 start \$1;
 #X msg 335 247 speed \$1;
@@ -267,7 +267,7 @@
 #X text 195 222 crossfade mode;
 #X text 34 18 You can set a fade in and fade out time in ms with the 'fade' message or '-fade' flag. This fades in from the start point and fades out to reach the end point., f 54;
 #X text 34 57 When you are looping \, you can set to crossfade mode with the 'xfade' message or '-xfade' flag. This way \, when it fades out \, it starts fading before the the loop restarts. The crossfade is a sine/cosine equal power function., f 54;
-#X obj 74 280 else/tabplayer~ -loop -fade 500 \$0-violin;
+#X obj 74 280 zelse/ztabplayer~ -loop -fade 500 \$0-violin;
 #X connect 2 0 12 0;
 #X connect 3 0 2 0;
 #X connect 3 0 4 0;
@@ -285,7 +285,7 @@
 #X text 179 481 - non zero enables looping \, <0> disables it (default 0), f 61;
 #X text 111 523 sr <float>;
 #X text 179 523 - sets sample rate of sample (default \, Pd's sample rate), f 61;
-#X obj 62 211 else/tabwriter~;
+#X obj 62 211 zelse/ztabwriter~;
 #X text 191 414 start playing - optional 1st float sets start (ms) \, 2nd sets end (in ms) and 3rd sets speed rate, f 59;
 #X text 179 277 -;
 #X text 191 277 gate on or impulse starts playing \, gate off stops if not in trigger mode \, which is the default mode;
@@ -306,7 +306,7 @@
 #X text 194 383 You can change Pd's sample rate and see how the file always plays at the same speed., f 27;
 #X msg 79 290 lagrange;
 #X msg 92 315 spline;
-#X obj 61 348 else/tabplayer~ -lagrange \$0-sax;
+#X obj 61 348 zelse/ztabplayer~ -lagrange \$0-sax;
 #X msg 60 183 44100;
 #X obj 182 287 soundfiler;
 #X listbox 182 313 7 0 0 0 - - - 0;

@@ -3,7 +3,7 @@
 #include <m_pd.h>
 #include <buffer.h>
 
-typedef struct _tabreader{
+typedef struct _ztabreader{
     t_object  x_obj;
     t_buffer *x_buffer;
     t_float   x_f; // dummy
@@ -15,59 +15,59 @@ typedef struct _tabreader{
     int       x_namemode;         // 0 is <ch>-<arrayname>, 1 is <arrayname>-<ch>
     t_float	  x_bias;
     t_float   x_tension;
-}t_tabreader;
+}t_ztabreader;
 
-static t_class *tabreader_class;
+static t_class *ztabreader_class;
 
-static void tabreader_set_nointerp(t_tabreader *x){
+static void ztabreader_set_nointerp(t_ztabreader *x){
     x->x_i_mode = 0;
 }
 
-static void tabreader_set_linear(t_tabreader *x){
+static void ztabreader_set_linear(t_ztabreader *x){
     x->x_i_mode = 1;
 }
 
-static void tabreader_set_cos(t_tabreader *x){
+static void ztabreader_set_cos(t_ztabreader *x){
     x->x_i_mode = 2;
 }
 
-static void tabreader_set_lagrange(t_tabreader *x){
+static void ztabreader_set_lagrange(t_ztabreader *x){
     x->x_i_mode = 3;
 }
 
-static void tabreader_set_cubic(t_tabreader *x){
+static void ztabreader_set_cubic(t_ztabreader *x){
     x->x_i_mode = 4;
 }
 
-static void tabreader_set_spline(t_tabreader *x){
+static void ztabreader_set_spline(t_ztabreader *x){
     x->x_i_mode = 5;
 }
 
-static void tabreader_set_hermite(t_tabreader *x, t_floatarg tension, t_floatarg bias){
+static void ztabreader_set_hermite(t_ztabreader *x, t_floatarg tension, t_floatarg bias){
     x->x_tension = 0.5 * (1. - tension);
     x->x_bias = bias;
     x->x_i_mode = 6;
 }
 
-static void tabreader_set(t_tabreader *x, t_symbol *s){
+static void ztabreader_set(t_ztabreader *x, t_symbol *s){
     buffer_setarray(x->x_buffer, s);
 }
 
-static void tabreader_channel(t_tabreader *x, t_floatarg f){
+static void ztabreader_channel(t_ztabreader *x, t_floatarg f){
     x->x_ch = f < 1 ? 1 : (f > 64 ? 64 : (int) f);
     buffer_getchannel(x->x_buffer, x->x_ch, 1);
 }
 
-static void tabreader_index(t_tabreader *x, t_floatarg f){
+static void ztabreader_index(t_ztabreader *x, t_floatarg f){
     x->x_idx = (int)(f != 0);
 }
 
-static void tabreader_loop(t_tabreader *x, t_floatarg f){
+static void ztabreader_loop(t_ztabreader *x, t_floatarg f){
     x->x_loop = (int)(f != 0);
 }
 
-static t_int *tabreader_perform(t_int *w){
-    t_tabreader *x = (t_tabreader *)(w[1]);
+static t_int *ztabreader_perform(t_int *w){
+    t_ztabreader *x = (t_ztabreader *)(w[1]);
     t_sample *in = (t_float *)(w[2]);
     t_sample *out = (t_float *)(w[3]);
     int nblock = (int)(w[4]);
@@ -141,17 +141,17 @@ static t_int *tabreader_perform(t_int *w){
     return(w+5);
 }
 
-static void tabreader_dsp(t_tabreader *x, t_signal **sp){
+static void ztabreader_dsp(t_ztabreader *x, t_signal **sp){
     buffer_checkdsp(x->x_buffer);
-    dsp_add(tabreader_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n);
+    dsp_add(ztabreader_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n);
 }
 
-static void tabreader_free(t_tabreader *x){
+static void ztabreader_free(t_ztabreader *x){
     buffer_free(x->x_buffer);
 }
 
-static void *tabreader_new(t_symbol *s, int ac, t_atom * av){
-    t_tabreader *x = (t_tabreader *)pd_new(tabreader_class);
+static void *ztabreader_new(t_symbol *s, int ac, t_atom * av){
+    t_ztabreader *x = (t_ztabreader *)pd_new(ztabreader_class);
 	t_symbol *name = s = NULL;
 	int nameset = 0, ch = 1;
     x->x_idx = x->x_loop = 0;
@@ -171,27 +171,27 @@ static void *tabreader_new(t_symbol *s, int ac, t_atom * av){
             else if(curarg == gensym("-none")){
                 if(nameset)
                     goto errstate;
-                tabreader_set_nointerp(x), ac--, av++;
+                ztabreader_set_nointerp(x), ac--, av++;
             }
             else if(curarg == gensym("-lin")){
                 if(nameset)
                     goto errstate;
-                tabreader_set_linear(x), ac--, av++;
+                ztabreader_set_linear(x), ac--, av++;
             }
             else if(curarg == gensym("-cos")){
                 if(nameset)
                     goto errstate;
-                tabreader_set_cos(x), ac--, av++;
+                ztabreader_set_cos(x), ac--, av++;
             }
             else if(curarg == gensym("-cubic")){
                 if(nameset)
                     goto errstate;
-                tabreader_set_cubic(x), ac--, av++;
+                ztabreader_set_cubic(x), ac--, av++;
             }
             else if(curarg == gensym("-lagrange")){
                 if(nameset)
                     goto errstate;
-                tabreader_set_lagrange(x), ac--, av++;
+                ztabreader_set_lagrange(x), ac--, av++;
             }
             else if(curarg == gensym("-hermite")){
                 if(nameset)
@@ -202,7 +202,7 @@ static void *tabreader_new(t_symbol *s, int ac, t_atom * av){
                     ac--, av++;
                     float tension = atom_getfloat(av);
                     ac--, av++;
-                    tabreader_set_hermite(x, bias, tension);
+                    ztabreader_set_hermite(x, bias, tension);
                 }
                 else
                     goto errstate;
@@ -255,25 +255,25 @@ static void *tabreader_new(t_symbol *s, int ac, t_atom * av){
     outlet_new(&x->x_obj, gensym("signal"));
 	return(x);
 	errstate:
-		post("tabreader~: improper args");
+		post("ztabreader~: improper args");
 		return(NULL);
 }
 
-void tabreader_tilde_setup(void){
-    tabreader_class = class_new(gensym("tabreader~"), (t_newmethod)tabreader_new,
-        (t_method)tabreader_free, sizeof(t_tabreader), 0, A_GIMME, 0);
-    CLASS_MAINSIGNALIN(tabreader_class, t_tabreader, x_f);
-    class_addmethod(tabreader_class, (t_method)tabreader_dsp, gensym("dsp"), A_CANT, 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set, gensym("set"), A_SYMBOL, 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_channel, gensym("channel"), A_FLOAT, 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_index, gensym("index"), A_FLOAT, 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_loop, gensym("loop"), A_FLOAT, 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_nointerp, gensym("none"), 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_linear, gensym("lin"), 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_cos, gensym("cos"), 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_lagrange, gensym("lagrange"), 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_cubic, gensym("cubic"), 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_spline, gensym("spline"), 0);
-    class_addmethod(tabreader_class, (t_method)tabreader_set_hermite, gensym("hermite"),
+void ztabreader_tilde_setup(void){
+    ztabreader_class = class_new(gensym("ztabreader~"), (t_newmethod)ztabreader_new,
+        (t_method)ztabreader_free, sizeof(t_ztabreader), 0, A_GIMME, 0);
+    CLASS_MAINSIGNALIN(ztabreader_class, t_ztabreader, x_f);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_dsp, gensym("dsp"), A_CANT, 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set, gensym("set"), A_SYMBOL, 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_channel, gensym("channel"), A_FLOAT, 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_index, gensym("index"), A_FLOAT, 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_loop, gensym("loop"), A_FLOAT, 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_nointerp, gensym("none"), 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_linear, gensym("lin"), 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_cos, gensym("cos"), 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_lagrange, gensym("lagrange"), 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_cubic, gensym("cubic"), 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_spline, gensym("spline"), 0);
+    class_addmethod(ztabreader_class, (t_method)ztabreader_set_hermite, gensym("hermite"),
         A_FLOAT, A_FLOAT, 0);
 }

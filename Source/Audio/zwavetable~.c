@@ -8,7 +8,7 @@
 
 #define MAXLEN 1024
 
-typedef struct _wavetable{
+typedef struct _zwavetable{
     t_object    x_obj;
     t_buffer   *x_buffer;
     double     *x_phase;
@@ -36,11 +36,11 @@ typedef struct _wavetable{
     t_glist    *x_glist; // object list
     t_float    *x_signalscalar; // right inlet's float field
     t_float     x_phase_sync_float; // float from magic
-}t_wavetable;
+}t_zwavetable;
 
-static t_class *wavetable_class;
+static t_class *zwavetable_class;
 
-static double wavetable_read(t_wavetable *x, double xpos, int frame, int size, t_word *vp){
+static double zwavetable_read(t_zwavetable *x, double xpos, int frame, int size, t_word *vp){
     double val = 0;
     if(frame >= x->x_slices)
         return(val);
@@ -78,7 +78,7 @@ static double wavetable_read(t_wavetable *x, double xpos, int frame, int size, t
     return(val);
 }
 
-double wavetable_wrap_phase(double phase){
+double zwavetable_wrap_phase(double phase){
     while(phase >= 1)
         phase -= 1.;
     while(phase < 0)
@@ -86,8 +86,8 @@ double wavetable_wrap_phase(double phase){
     return(phase);
 }
 
-static t_int *wavetable_perform(t_int *w){
-    t_wavetable *x = (t_wavetable *)(w[1]);
+static t_int *zwavetable_perform(t_int *w){
+    t_zwavetable *x = (t_zwavetable *)(w[1]);
     t_float *in1 = (t_float *)(w[2]);
     t_float *in2 = (t_float *)(w[3]);
     t_float *in3 = (t_float *)(w[4]);
@@ -136,7 +136,7 @@ static t_int *wavetable_perform(t_int *w){
                 }
             }
             double phase_offset = x->x_ch3 == 1 ? in3[i] : in3[j*n + i];
-            double wraped_phase = wavetable_wrap_phase(phase[j] + phase_offset);
+            double wraped_phase = zwavetable_wrap_phase(phase[j] + phase_offset);
             
             t_float output;
             if(vp){
@@ -145,7 +145,7 @@ static t_int *wavetable_perform(t_int *w){
                 else{
                     double xpos = wraped_phase * (double)npts;
                     if(x->x_slices == 1)
-                        output = wavetable_read(x, xpos, 0, npts, vp);
+                        output = zwavetable_read(x, xpos, 0, npts, vp);
                     else{
                         if(ypos < 0)
                             ypos = 0;
@@ -155,8 +155,8 @@ static t_int *wavetable_perform(t_int *w){
                         int frame = (int)ypos;
                         int nextframe = frame + 1;
                         double xfade = ypos - (double)frame;
-                        double wt1 = wavetable_read(x, xpos, frame, npts, vp);
-                        double wt2 = wavetable_read(x, xpos, nextframe, npts, vp);
+                        double wt1 = zwavetable_read(x, xpos, frame, npts, vp);
+                        double wt2 = zwavetable_read(x, xpos, nextframe, npts, vp);
                         output = wt1 * (1-xfade) + wt2 * xfade;
                     }
                 }
@@ -167,7 +167,7 @@ static t_int *wavetable_perform(t_int *w){
             
             out[j*n + i] = output;
             
-            phase[j] = wavetable_wrap_phase(phase[j] + step);
+            phase[j] = zwavetable_wrap_phase(phase[j] + step);
         }
     }
     x->x_phase = phase;
@@ -175,10 +175,10 @@ static t_int *wavetable_perform(t_int *w){
     return(w+7);
 }
 
-static void wavetable_dsp(t_wavetable *x, t_signal **sp){
+static void zwavetable_dsp(t_zwavetable *x, t_signal **sp){
     buffer_checkdsp(x->x_buffer);
     if(x->x_buffer->c_playable && x->x_buffer->c_npts < 4)
-        pd_error(x, "[wavetable~]: table too small, minimum size is 4");
+        pd_error(x, "[zwavetable~]: table too small, minimum size is 4");
     x->x_n = sp[0]->s_n, x->x_sr_rec = 1.0 / (double)sp[0]->s_sr;
     x->x_ch2 = sp[1]->s_nchans, x->x_ch3 = sp[2]->s_nchans, x->x_ch4 = sp[3]->s_nchans;
     x->x_sig1 = else_magic_inlet_connection((t_object *)x, x->x_glist, 0, &s_signal);
@@ -196,46 +196,46 @@ static void wavetable_dsp(t_wavetable *x, t_signal **sp){
     || (x->x_ch3 > 1 && x->x_ch3 != x->x_nchans)
     || (x->x_ch4 > 1 && x->x_ch4 != x->x_nchans)){
         dsp_add_zero(sp[4]->s_vec, x->x_nchans*x->x_n);
-        pd_error(x, "[wavetable~]: channel sizes mismatch");
+        pd_error(x, "[zwavetable~]: channel sizes mismatch");
         return;
     }
-    dsp_add(wavetable_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec,
+    dsp_add(zwavetable_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec,
             sp[2]->s_vec, sp[3]->s_vec, sp[4]->s_vec);
 }
 
-static void wavetable_midi(t_wavetable *x, t_floatarg f){
+static void zwavetable_midi(t_zwavetable *x, t_floatarg f){
     x->x_midi = (int)(f != 0);
 }
 
-static void wavetable_table(t_wavetable *x, t_symbol *s){
+static void zwavetable_table(t_zwavetable *x, t_symbol *s){
     buffer_setarray(x->x_buffer, s);
 }
 
-static void wavetable_slices(t_wavetable *x, t_floatarg f){
+static void zwavetable_slices(t_zwavetable *x, t_floatarg f){
     x->x_slices = f < 1 ? 1 : (int)f;
 }
 
-static void wavetable_none(t_wavetable *x){
+static void zwavetable_none(t_zwavetable *x){
     x->x_interp = 0;
 }
 
-static void wavetable_lin(t_wavetable *x){
+static void zwavetable_lin(t_zwavetable *x){
     x->x_interp = 1;
 }
 
-static void wavetable_cos(t_wavetable *x){
+static void zwavetable_cos(t_zwavetable *x){
     x->x_interp = 2;
 }
 
-static void wavetable_lagrange(t_wavetable *x){
+static void zwavetable_lagrange(t_zwavetable *x){
     x->x_interp = 3;
 }
 
-static void wavetable_spline(t_wavetable *x){
+static void zwavetable_spline(t_zwavetable *x){
     x->x_interp = 4;
 }
 
-static void wavetable_set(t_wavetable *x, t_symbol *s, int ac, t_atom *av){
+static void zwavetable_set(t_zwavetable *x, t_symbol *s, int ac, t_atom *av){
     x->x_ignore = s;
     if(ac != 2)
         return;
@@ -249,7 +249,7 @@ static void wavetable_set(t_wavetable *x, t_symbol *s, int ac, t_atom *av){
     x->x_freq_list[i] = f;
 }
 
-static void wavetable_list(t_wavetable *x, t_symbol *s, int ac, t_atom * av){
+static void zwavetable_list(t_zwavetable *x, t_symbol *s, int ac, t_atom * av){
     x->x_ignore = s;
     if(ac == 0)
         return;
@@ -261,11 +261,11 @@ static void wavetable_list(t_wavetable *x, t_symbol *s, int ac, t_atom * av){
         x->x_freq_list[i] = atom_getfloat(av+i);
 }
 
-static void wavetable_soft(t_wavetable *x, t_floatarg f){
+static void zwavetable_soft(t_zwavetable *x, t_floatarg f){
     x->x_soft = (int)(f != 0);
 }
 
-static void *wavetable_free(t_wavetable *x){
+static void *zwavetable_free(t_zwavetable *x){
     buffer_free(x->x_buffer);
     inlet_free(x->x_inlet_sync);
     inlet_free(x->x_inlet_phase);
@@ -277,8 +277,8 @@ static void *wavetable_free(t_wavetable *x){
     return(void *)x;
 }
 
-static void *wavetable_new(t_symbol *s, int ac, t_atom *av){
-    t_wavetable *x = (t_wavetable *)pd_new(wavetable_class);
+static void *zwavetable_new(t_symbol *s, int ac, t_atom *av){
+    t_zwavetable *x = (t_zwavetable *)pd_new(zwavetable_class);
     x->x_ignore = s;
     x->x_midi = x->x_soft = 0;
     x->x_dir = (t_int *)getbytes(sizeof(*x->x_dir));
@@ -297,22 +297,22 @@ static void *wavetable_new(t_symbol *s, int ac, t_atom *av){
             if(curarg == gensym("-none")){
                 if(nameset)
                     goto errstate;
-                wavetable_none(x), ac--, av++;
+                zwavetable_none(x), ac--, av++;
             }
             else if(curarg == gensym("-lin")){
                 if(nameset)
                     goto errstate;
-                wavetable_lin(x), ac--, av++;
+                zwavetable_lin(x), ac--, av++;
             }
             else if(curarg == gensym("-cos")){
                 if(nameset)
                     goto errstate;
-                wavetable_cos(x), ac--, av++;
+                zwavetable_cos(x), ac--, av++;
             }
             else if(curarg == gensym("-lagrange")){
                 if(nameset)
                     goto errstate;
-                wavetable_lagrange(x), ac--, av++;
+                zwavetable_lagrange(x), ac--, av++;
             }
             else if(curarg == gensym("-midi")){
                 ac--, av++;
@@ -415,24 +415,24 @@ static void *wavetable_new(t_symbol *s, int ac, t_atom *av){
     x->x_signalscalar = obj_findsignalscalar((t_object *)x, 1);
     return(x);
 errstate:
-    post("[wavetable~]: improper args");
+    post("[zwavetable~]: improper args");
     return(NULL);
 }
 
-void wavetable_tilde_setup(void){
-    wavetable_class = class_new(gensym("wavetable~"), (t_newmethod)wavetable_new, (t_method)wavetable_free,
-        sizeof(t_wavetable), CLASS_MULTICHANNEL, A_GIMME, 0);
-    class_addmethod(wavetable_class, nullfn, gensym("signal"), 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_dsp, gensym("dsp"), A_CANT, 0);
-    class_addlist(wavetable_class, wavetable_list);
-    class_addmethod(wavetable_class, (t_method)wavetable_soft, gensym("soft"), A_DEFFLOAT, 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_midi, gensym("midi"), A_DEFFLOAT, 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_set, gensym("set"), A_GIMME, 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_none, gensym("none"), 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_lin, gensym("lin"), 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_cos, gensym("cos"), 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_lagrange, gensym("lagrange"), 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_spline, gensym("spline"), 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_table, gensym("table"), A_SYMBOL, 0);
-    class_addmethod(wavetable_class, (t_method)wavetable_slices, gensym("n"), A_FLOAT, 0);
+void zwavetable_tilde_setup(void){
+    zwavetable_class = class_new(gensym("zwavetable~"), (t_newmethod)zwavetable_new, (t_method)zwavetable_free,
+        sizeof(t_zwavetable), CLASS_MULTICHANNEL, A_GIMME, 0);
+    class_addmethod(zwavetable_class, nullfn, gensym("signal"), 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_dsp, gensym("dsp"), A_CANT, 0);
+    class_addlist(zwavetable_class, zwavetable_list);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_soft, gensym("soft"), A_DEFFLOAT, 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_midi, gensym("midi"), A_DEFFLOAT, 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_set, gensym("set"), A_GIMME, 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_none, gensym("none"), 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_lin, gensym("lin"), 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_cos, gensym("cos"), 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_lagrange, gensym("lagrange"), 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_spline, gensym("spline"), 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_table, gensym("table"), A_SYMBOL, 0);
+    class_addmethod(zwavetable_class, (t_method)zwavetable_slices, gensym("n"), A_FLOAT, 0);
 }

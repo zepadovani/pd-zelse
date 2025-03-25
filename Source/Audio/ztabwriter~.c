@@ -6,7 +6,7 @@
 
 #define DRAW_PERIOD     500.        // draw period
 
-typedef struct _tabwriter{
+typedef struct _ztabwriter{
     t_object            x_obj;
     t_buffer           *x_buffer;
     t_float             x_f; // dummy input float
@@ -34,18 +34,18 @@ typedef struct _tabwriter{
     t_outlet           *x_outlet_bang;
     t_float           **x_ins; // input vectors
     t_float            *x_out; // signal output
-}t_tabwriter;
+}t_ztabwriter;
 
-static t_class *tabwriter_class;
+static t_class *ztabwriter_class;
 
-static void tabwriter_draw(t_tabwriter *x){
+static void ztabwriter_draw(t_ztabwriter *x){
     if(x->x_buffer != NULL){
         if(x->x_buffer->c_playable)
             buffer_redraw(x->x_buffer);
     }
 }
 
-static void tabwriter_tick(t_tabwriter *x){ // Redraw!
+static void ztabwriter_tick(t_ztabwriter *x){ // Redraw!
     double timesince = clock_gettimesince(x->x_clocklasttick);
     if(timesince >= DRAW_PERIOD){
         buffer_redraw(x->x_buffer);
@@ -53,7 +53,7 @@ static void tabwriter_tick(t_tabwriter *x){ // Redraw!
     }
 }
 
-static void tabwriter_set(t_tabwriter *x, t_symbol *s){
+static void ztabwriter_set(t_ztabwriter *x, t_symbol *s){
     if(x->x_buffer != NULL)
         buffer_setarray(x->x_buffer, s);
     else{
@@ -69,20 +69,20 @@ static void tabwriter_set(t_tabwriter *x, t_symbol *s){
     }
 }
 
-static void tabwriter_reset(t_tabwriter *x){
+static void ztabwriter_reset(t_ztabwriter *x){
     x->x_startindex = 0;
     x->x_whole_array = 1; // array size in samples
 }
 
-static void tabwriter_continue(t_tabwriter *x, t_floatarg f){
+static void ztabwriter_continue(t_ztabwriter *x, t_floatarg f){
 	x->x_continue = (f != 0);
 }
 
-static void tabwriter_loop(t_tabwriter *x, t_floatarg f){
+static void ztabwriter_loop(t_ztabwriter *x, t_floatarg f){
     x->x_loop = (f != 0);
 }
 
-static void tabwriter_rec(t_tabwriter *x){
+static void ztabwriter_rec(t_ztabwriter *x){
     if(x->x_buffer != NULL){
         if(!x->x_continue)
             x->x_phase = 0.;
@@ -91,7 +91,7 @@ static void tabwriter_rec(t_tabwriter *x){
     }
 }
 
-static void tabwriter_stop(t_tabwriter *x){
+static void ztabwriter_stop(t_ztabwriter *x){
     if(x->x_buffer != NULL){
         if(!x->x_continue)
             x->x_phase = 0.;
@@ -100,12 +100,12 @@ static void tabwriter_stop(t_tabwriter *x){
     }
 }
 
-static void tabwriter_float(t_tabwriter *x, t_floatarg f){
-    f > 0 ? tabwriter_rec(x) : tabwriter_stop(x);
+static void ztabwriter_float(t_ztabwriter *x, t_floatarg f){
+    f > 0 ? ztabwriter_rec(x) : ztabwriter_stop(x);
 }
 
-static t_int *tabwriter_perform(t_int *w){
-    t_tabwriter *x = (t_tabwriter *)(w[1]);
+static t_int *ztabwriter_perform(t_int *w){
+    t_ztabwriter *x = (t_ztabwriter *)(w[1]);
     if(x->x_buffer == NULL)
         return(w+2);
     t_buffer *c = x->x_buffer;
@@ -146,9 +146,9 @@ static t_int *tabwriter_perform(t_int *w){
             unsigned long long index = x->x_index;
             t_float gate = gatein[i];
             if(gate != 0 && last_gate == 0)
-                tabwriter_rec(x);
+                ztabwriter_rec(x);
             else if(gate == 0 && last_gate != 0)
-                tabwriter_stop(x);
+                ztabwriter_stop(x);
             last_gate = gate;
             if((start < end) && c->c_playable && x->x_isrunning){
                 range = end - start;
@@ -190,7 +190,7 @@ static t_int *tabwriter_perform(t_int *w){
     return(w+2);
 }
 
-static void tabwriter_dsp(t_tabwriter *x, t_signal **sp){
+static void ztabwriter_dsp(t_ztabwriter *x, t_signal **sp){
     if(x->x_buffer != NULL)
         buffer_checkdsp(x->x_buffer);
     x->x_ksr = sp[0]->s_sr * 0.001;
@@ -200,10 +200,10 @@ static void tabwriter_dsp(t_tabwriter *x, t_signal **sp){
         *(x->x_ins+i) = (*sigp++)->s_vec;
     x->x_gate_vec = (*sigp++)->s_vec;       // last is gate or index
     x->x_out = (*sigp++)->s_vec;            // output
-    dsp_add(tabwriter_perform, 1, x);
+    dsp_add(ztabwriter_perform, 1, x);
 }
 
-static void tabwriter_free(t_tabwriter *x){
+static void ztabwriter_free(t_ztabwriter *x){
     if(x->x_buffer != NULL)
         buffer_free(x->x_buffer);
     outlet_free(x->x_outlet_bang);
@@ -213,7 +213,7 @@ static void tabwriter_free(t_tabwriter *x){
     pd_unbind(&x->x_obj.ob_pd, gensym("pd-dsp-stopped"));
 }
 
-static void tabwriter_range_check(t_tabwriter *x){
+static void ztabwriter_range_check(t_ztabwriter *x){
     if(x->x_startindex > x->x_endindex){
         unsigned long long temp = x->x_startindex;
         x->x_startindex = x->x_endindex;
@@ -221,26 +221,26 @@ static void tabwriter_range_check(t_tabwriter *x){
     }
 }
 
-static void tabwriter_index(t_tabwriter *x, t_float f){
+static void ztabwriter_index(t_ztabwriter *x, t_float f){
     x->x_indexed = f != 0;
 }
 
-static void tabwriter_start(t_tabwriter *x, t_float f){
+static void ztabwriter_start(t_ztabwriter *x, t_float f){
     x->x_startindex = f < 0 ? 0 : (unsigned long long)(f * x->x_ksr);
-    tabwriter_range_check(x);
+    ztabwriter_range_check(x);
 }
 
-static void tabwriter_end(t_tabwriter *x, t_float end){
+static void ztabwriter_end(t_ztabwriter *x, t_float end){
     if(end < 0)
         x->x_whole_array = 1;
     else{
         x->x_endindex = (unsigned long long)(end * x->x_ksr);
         x->x_whole_array = 0;
     }
-    tabwriter_range_check(x);
+    ztabwriter_range_check(x);
 }
 
-static void tabwriter_range(t_tabwriter *x, t_floatarg f1, t_floatarg f2){
+static void ztabwriter_range(t_ztabwriter *x, t_floatarg f1, t_floatarg f2){
     if(!x->x_buffer) return;
     
     f1 = f1 < 0 ? 0 : f1 > 1 ? 1 : f1;
@@ -248,13 +248,13 @@ static void tabwriter_range(t_tabwriter *x, t_floatarg f1, t_floatarg f2){
     x->x_startindex = (unsigned long long)(f1 * x->x_buffer->c_npts);
     x->x_endindex = (unsigned long long)(f2 * x->x_buffer->c_npts);
     x->x_whole_array = x->x_endindex < 0;
-    tabwriter_range_check(x);
+    ztabwriter_range_check(x);
 }
 
-static void *tabwriter_new(t_symbol *s, int ac, t_atom *av){
+static void *ztabwriter_new(t_symbol *s, int ac, t_atom *av){
     t_symbol *dummy = s;
     dummy = NULL;
-    t_tabwriter *x = (t_tabwriter *)pd_new(tabwriter_class);
+    t_ztabwriter *x = (t_ztabwriter *)pd_new(ztabwriter_class);
     x->x_ksr = (float)sys_getsr() * 0.001;
     x->x_last_gate = x->x_newrun = x->x_isrunning = x->x_phase = 0;
     t_float numchan = 1;
@@ -359,8 +359,8 @@ static void *tabwriter_new(t_symbol *s, int ac, t_atom *av){
     x->x_numchans = chn_n;
     x->x_ins = getbytes(x->x_numchans * sizeof(*x->x_ins)); // allocate in vectors
     x->x_startindex = start < 0 ? 0 : (unsigned long long)(start * x->x_ksr);
-    tabwriter_end(x, end);
-    x->x_clock = clock_new(x, (t_method)tabwriter_tick);
+    ztabwriter_end(x, end);
+    x->x_clock = clock_new(x, (t_method)ztabwriter_tick);
     x->x_clocklasttick = clock_getlogicaltime();
     inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal);
     for(t_int i = 1; i < x->x_numchans; i++)
@@ -370,26 +370,26 @@ static void *tabwriter_new(t_symbol *s, int ac, t_atom *av){
     pd_bind(&x->x_obj.ob_pd, gensym("pd-dsp-stopped"));
     return(x);
 errstate:
-    post("[tabwriter~]: improper args");
+    post("[ztabwriter~]: improper args");
     return(NULL);
 }
 
-void tabwriter_tilde_setup(void){
-    tabwriter_class = class_new(gensym("tabwriter~"), (t_newmethod)tabwriter_new,
-        (t_method)tabwriter_free, sizeof(t_tabwriter), CLASS_DEFAULT, A_GIMME, 0);
-    class_addfloat(tabwriter_class, tabwriter_float);
-    class_addbang(tabwriter_class, tabwriter_draw); // for pd-dsp-stopped, undocumented
-//    class_addbang(tabwriter_class, tabwriter_rec);
-    class_addmethod(tabwriter_class, nullfn, gensym("signal"), 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_dsp, gensym("dsp"), A_CANT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_continue, gensym("continue"), A_FLOAT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_loop, gensym("loop"), A_FLOAT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_set, gensym("set"), A_SYMBOL, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_reset, gensym("reset"), 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_start, gensym("start"), A_FLOAT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_range, gensym("range"), A_FLOAT, A_FLOAT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_end, gensym("end"), A_FLOAT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_index, gensym("index"), A_FLOAT, 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_rec, gensym("rec"), 0);
-    class_addmethod(tabwriter_class, (t_method)tabwriter_stop, gensym("stop"), 0);
+void ztabwriter_tilde_setup(void){
+    ztabwriter_class = class_new(gensym("ztabwriter~"), (t_newmethod)ztabwriter_new,
+        (t_method)ztabwriter_free, sizeof(t_ztabwriter), CLASS_DEFAULT, A_GIMME, 0);
+    class_addfloat(ztabwriter_class, ztabwriter_float);
+    class_addbang(ztabwriter_class, ztabwriter_draw); // for pd-dsp-stopped, undocumented
+//    class_addbang(ztabwriter_class, ztabwriter_rec);
+    class_addmethod(ztabwriter_class, nullfn, gensym("signal"), 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_dsp, gensym("dsp"), A_CANT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_continue, gensym("continue"), A_FLOAT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_loop, gensym("loop"), A_FLOAT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_set, gensym("set"), A_SYMBOL, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_reset, gensym("reset"), 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_start, gensym("start"), A_FLOAT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_range, gensym("range"), A_FLOAT, A_FLOAT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_end, gensym("end"), A_FLOAT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_index, gensym("index"), A_FLOAT, 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_rec, gensym("rec"), 0);
+    class_addmethod(ztabwriter_class, (t_method)ztabwriter_stop, gensym("stop"), 0);
 }

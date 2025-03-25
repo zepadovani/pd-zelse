@@ -8,9 +8,9 @@
 #define FLEN      65536
 #define MAX_COEF  256
 
-static t_class *shaper_class;
+static t_class *zshaper_class;
 
-typedef struct _shaper{
+typedef struct _zshaper{
     t_object    x_obj;
     t_float    *x_cheby;
     t_float    *x_coef;
@@ -23,14 +23,14 @@ typedef struct _shaper{
     double      x_xnm1;
     double      x_ynm1;
     t_buffer   *x_buffer;
-}t_shaper;
+}t_zshaper;
 
-static void shaper_set(t_shaper *x, t_symbol *s){
+static void zshaper_set(t_zshaper *x, t_symbol *s){
     buffer_setarray(x->x_buffer, s);
     x->x_arrayset = 1;
 }
 
-static void update_cheby_func(t_shaper *x){
+static void update_cheby_func(t_zshaper *x){
     int i;
     for(i = 0; i < FLEN; i++) // clear
         x->x_cheby[i] = 0;
@@ -59,24 +59,24 @@ static void update_cheby_func(t_shaper *x){
     }
 }
 
-static void shaper_filter(t_shaper *x, t_float f){
+static void zshaper_filter(t_zshaper *x, t_float f){
     x->x_dc_filter = f != 0;
 }
 
-static void shaper_dc(t_shaper *x, t_float f){
+static void zshaper_dc(t_zshaper *x, t_float f){
     x->x_coef[0] = f;
     if(!x->x_norm)
         update_cheby_func(x);
     x->x_arrayset = 0;
 }
 
-static void shaper_norm(t_shaper *x, t_float f){
+static void zshaper_norm(t_zshaper *x, t_float f){
     x->x_norm = f != 0;
     update_cheby_func(x);
     x->x_arrayset = 0;
 }
 
-static void shaper_list(t_shaper *x, t_symbol *s, short ac, t_atom *av){
+static void zshaper_list(t_zshaper *x, t_symbol *s, short ac, t_atom *av){
     s = NULL; // get rid of warning
     x->x_count = 1;
     for(short i = 0; i < ac; i++)
@@ -86,8 +86,8 @@ static void shaper_list(t_shaper *x, t_symbol *s, short ac, t_atom *av){
     x->x_arrayset = 0;
 }
 
-static t_int *shaper_perform(t_int *w){
-    t_shaper *x = (t_shaper *) (w[1]);
+static t_int *zshaper_perform(t_int *w){
+    t_zshaper *x = (t_zshaper *) (w[1]);
     t_float *in = (t_float *)(w[2]);
     t_float *out = (t_float *)(w[3]);
     double xnm1 = x->x_xnm1;
@@ -138,24 +138,24 @@ static t_int *shaper_perform(t_int *w){
     return(w+5);
 }
 
-static void shaper_dsp(t_shaper *x, t_signal **sp){
+static void zshaper_dsp(t_zshaper *x, t_signal **sp){
     if(sp[0]->s_sr != x->x_sr){
         x->x_sr = sp[0]->s_sr;
         x->x_a = 1 - (5*TWO_PI/(double)x->x_sr);
     }
     buffer_checkdsp(x->x_buffer);
-    dsp_add(shaper_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n);
+    dsp_add(zshaper_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n);
 }
 
-static void shaper_free(t_shaper *x){
+static void zshaper_free(t_zshaper *x){
     buffer_free(x->x_buffer);
     free(x->x_cheby);
     free(x->x_coef);
 }
 
-static void *shaper_new(t_symbol *s, int ac, t_atom *av){
+static void *zshaper_new(t_symbol *s, int ac, t_atom *av){
     s = NULL;
-    t_shaper *x = (t_shaper *)pd_new(shaper_class);
+    t_zshaper *x = (t_zshaper *)pd_new(zshaper_class);
     t_symbol *name = &s_;
     x->x_cheby = (float *)calloc(FLEN, sizeof(float));
     x->x_coef = (float *)calloc(MAX_COEF, sizeof(float));
@@ -221,18 +221,18 @@ static void *shaper_new(t_symbol *s, int ac, t_atom *av){
     outlet_new(&x->x_obj, gensym("signal"));
     return(x);
     errstate:
-        post("[shaper~]: improper args");
+        post("[zshaper~]: improper args");
         return(NULL);
 }
 
-void shaper_tilde_setup(void){
-    shaper_class = class_new(gensym("shaper~"), (t_newmethod)shaper_new,
-        (t_method)shaper_free,sizeof(t_shaper), 0, A_GIMME, 0);
-    class_addmethod(shaper_class, nullfn, gensym("signal"), 0);
-    class_addmethod(shaper_class, (t_method)shaper_dsp, gensym("dsp"), A_CANT,  0);
-    class_addmethod(shaper_class, (t_method)shaper_list, gensym("list"), A_GIMME, 0);
-    class_addmethod(shaper_class, (t_method)shaper_norm, gensym("norm"), A_DEFFLOAT, 0);
-    class_addmethod(shaper_class, (t_method)shaper_dc, gensym("dc"), A_DEFFLOAT, 0);
-    class_addmethod(shaper_class, (t_method)shaper_filter, gensym("filter"), A_DEFFLOAT, 0);
-    class_addmethod(shaper_class, (t_method)shaper_set, gensym("set"), A_SYMBOL, 0);
+void zshaper_tilde_setup(void){
+    zshaper_class = class_new(gensym("zshaper~"), (t_newmethod)zshaper_new,
+        (t_method)zshaper_free,sizeof(t_zshaper), 0, A_GIMME, 0);
+    class_addmethod(zshaper_class, nullfn, gensym("signal"), 0);
+    class_addmethod(zshaper_class, (t_method)zshaper_dsp, gensym("dsp"), A_CANT,  0);
+    class_addmethod(zshaper_class, (t_method)zshaper_list, gensym("list"), A_GIMME, 0);
+    class_addmethod(zshaper_class, (t_method)zshaper_norm, gensym("norm"), A_DEFFLOAT, 0);
+    class_addmethod(zshaper_class, (t_method)zshaper_dc, gensym("dc"), A_DEFFLOAT, 0);
+    class_addmethod(zshaper_class, (t_method)zshaper_filter, gensym("filter"), A_DEFFLOAT, 0);
+    class_addmethod(zshaper_class, (t_method)zshaper_set, gensym("set"), A_SYMBOL, 0);
 }

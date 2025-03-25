@@ -29,8 +29,8 @@
 #X obj 501 312 else/sample~ buff_\$0 -size 44100 -ch 2, f 24;
 #X obj 48 285 else/setdsp~;
 #X text 40 160 You can manually set multi channel arrays in Pd like that or use the [sample~] object \, which does this internally.;
-#X obj 134 324 else/tabwriter~ smp_\$0 2;
-#X obj 304 324 else/tabwriter~ buff_\$0 2;
+#X obj 134 324 zelse/ztabwriter~ smp_\$0 2;
+#X obj 304 324 zelse/ztabwriter~ buff_\$0 2;
 #X obj 451 353 bng 18 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
 #X obj 275 355 bng 18 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
 #X obj 325 288 adc~;
@@ -99,7 +99,7 @@
 #X text 198 424 non-zero: continue recording from where it last stopped, f 57;
 #X text 198 439 non-zero enables loop recording \, 0 disables it, f 57;
 #X obj 388 256 bng 18 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
-#X obj 247 229 else/tabwriter~ \$0-array;
+#X obj 247 229 zelse/ztabwriter~ \$0-array;
 #X obj 74 531 cnv 17 3 17 empty empty 1 5 9 0 16 #dcdcdc #9c9c9c 0;
 #X text 152 531 bang;
 #X text 186 531 - when recording reaches the end of the array, f 59;
@@ -129,7 +129,7 @@
 #X text 320 147 sets start/end proportionally, f 14;
 #X text 276 181 sets to range 0-1;
 #X obj 108 278 else/numbox~ 6 12 100 #c0c0c4 #440008 10 0 0 0;
-#X obj 108 236 else/tabwriter~ -loop -continue -start 500 -end 1500 \$0-test, f 31;
+#X obj 108 236 zelse/ztabwriter~ -loop -continue -start 500 -end 1500 \$0-test, f 31;
 #X obj 43 113 noise~;
 #X obj 372 218 else/setdsp~;
 #X obj 291 276 bng 18 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
@@ -148,7 +148,7 @@
 #X text 104 395 range <f \, f>;
 #X text 184 395 - sets start and end point range proportionally (from 0 to 1), f 61;
 #X text 42 273 see also:;
-#X obj 108 273 else/tabplayer~;
+#X obj 108 273 zelse/ztabplayer~;
 #X text 221 589 - array name (optional), f 42;
 #X obj 247 256 else/numbox~ 6 12 100 #c0c0c4 #440008 10 0 0 0;
 #X obj 74 479 cnv 17 3 17 empty empty r 5 9 0 16 #dcdcdc #9c9c9c 0;
@@ -182,9 +182,9 @@
 #X obj 291 243 bng 18 250 50 0 empty empty empty 17 7 0 10 #dcdcdc #000000 #000000;
 #X text 255 244 done;
 #X obj 291 176 else/numbox~ 3 10 100 #c0c0c4 #440008 10 0 0 0;
-#X obj 291 150 else/toggleff~;
+#X obj 291 150 zelse/ztoggleff~;
 #X obj 291 91 tgl 19 0 empty empty empty 0 -8 0 10 #dfdfdf #000000 #000000 0 1;
-#X obj 291 120 else/tempo~ -ms 500;
+#X obj 291 120 zelse/ztempo~ -ms 500;
 #X text 83 28 By default \, the right inlet is a gate at audio rate to start/stop recording., f 40;
 #X obj 612 215 else/numbox~ 6 10 100 #c0c0c4 #440008 10 0 0 0;
 #X obj 612 188 else/ramp~ 0 0 88200;
@@ -201,9 +201,9 @@
 #X coords 0 1 88199 -1 270 120 1 0 0;
 #X restore 450 343 graph;
 #X text 444 491 |---------------- time in ms ----------------|;
-#X obj 108 203 else/tabwriter~ -loop -continue -start 500 -end 1500 \$0-test1, f 31;
+#X obj 108 203 zelse/ztabwriter~ -loop -continue -start 500 -end 1500 \$0-test1, f 31;
 #X obj 483 208 noise~;
-#X obj 483 242 else/tabwriter~ -index -start 500 -end 1500 \$0-test2, f 22;
+#X obj 483 242 zelse/ztabwriter~ -index -start 500 -end 1500 \$0-test2, f 22;
 #X text 456 37 In indexed mode \, the outlets are non functional and the loop/continue modes are useless \, because you set the index input to record to directly. This is a lower level option that can be useful if you wanna go a bit crazy or implement some complex algorithm., f 48;
 #X connect 8 0 35 0;
 #X connect 9 0 8 0;

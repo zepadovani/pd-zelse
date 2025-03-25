@@ -8,7 +8,7 @@
 
 #define MAXLEN 1024
 
-typedef struct _wt{
+typedef struct _zwt{
     t_object    x_obj;
     t_buffer   *x_buffer;
     double     *x_phase;
@@ -36,11 +36,11 @@ typedef struct _wt{
     t_glist    *x_glist; // object list
     t_float    *x_signalscalar; // right inlet's float field
     t_float     x_phase_sync_float; // float from magic
-}t_wt;
+}t_zwt;
 
-static t_class *wt_class;
+static t_class *zwt_class;
 
-static double wt_read(t_wt *x, double xpos, int frame, int size, t_word *vp){
+static double zwt_read(t_zwt *x, double xpos, int frame, int size, t_word *vp){
     double val = 0;
     if(frame >= x->x_slices)
         return(val);
@@ -78,7 +78,7 @@ static double wt_read(t_wt *x, double xpos, int frame, int size, t_word *vp){
     return(val);
 }
 
-double wt_wrap_phase(double phase){
+double zwt_wrap_phase(double phase){
     while(phase >= 1)
         phase -= 1.;
     while(phase < 0)
@@ -86,8 +86,8 @@ double wt_wrap_phase(double phase){
     return(phase);
 }
 
-static t_int *wt_perform(t_int *w){
-    t_wt *x = (t_wt *)(w[1]);
+static t_int *zwt_perform(t_int *w){
+    t_zwt *x = (t_zwt *)(w[1]);
     t_float *in1 = (t_float *)(w[2]);
     t_float *in2 = (t_float *)(w[3]);
     t_float *in3 = (t_float *)(w[4]);
@@ -136,7 +136,7 @@ static t_int *wt_perform(t_int *w){
                 }
             }
             double phase_offset = x->x_ch3 == 1 ? in3[i] : in3[j*n + i];
-            double wraped_phase = wt_wrap_phase(phase[j] + phase_offset);
+            double wraped_phase = zwt_wrap_phase(phase[j] + phase_offset);
             
             t_float output;
             if(vp){
@@ -145,7 +145,7 @@ static t_int *wt_perform(t_int *w){
                 else{
                     double xpos = wraped_phase * (double)npts;
                     if(x->x_slices == 1)
-                        output = wt_read(x, xpos, 0, npts, vp);
+                        output = zwt_read(x, xpos, 0, npts, vp);
                     else{
                         if(ypos < 0)
                             ypos = 0;
@@ -155,9 +155,9 @@ static t_int *wt_perform(t_int *w){
                         int frame = (int)ypos;
                         int nextframe = frame + 1;
                         double xfade = ypos - (double)frame;
-                        double wt1 = wt_read(x, xpos, frame, npts, vp);
-                        double wt2 = wt_read(x, xpos, nextframe, npts, vp);
-                        output = wt1 * (1-xfade) + wt2 * xfade;
+                        double zwt1 = zwt_read(x, xpos, frame, npts, vp);
+                        double zwt2 = zwt_read(x, xpos, nextframe, npts, vp);
+                        output = zwt1 * (1-xfade) + zwt2 * xfade;
                     }
                 }
             }
@@ -167,7 +167,7 @@ static t_int *wt_perform(t_int *w){
             
             out[j*n + i] = output;
             
-            phase[j] = wt_wrap_phase(phase[j] + step);
+            phase[j] = zwt_wrap_phase(phase[j] + step);
         }
     }
     x->x_phase = phase;
@@ -175,10 +175,10 @@ static t_int *wt_perform(t_int *w){
     return(w+7);
 }
 
-static void wt_dsp(t_wt *x, t_signal **sp){
+static void zwt_dsp(t_zwt *x, t_signal **sp){
     buffer_checkdsp(x->x_buffer);
     if(x->x_buffer->c_playable && x->x_buffer->c_npts < 4)
-        pd_error(x, "[wt~]: table too small, minimum size is 4");
+        pd_error(x, "[zwt~]: table too small, minimum size is 4");
     x->x_n = sp[0]->s_n, x->x_sr_rec = 1.0 / (double)sp[0]->s_sr;
     x->x_ch2 = sp[1]->s_nchans, x->x_ch3 = sp[2]->s_nchans, x->x_ch4 = sp[3]->s_nchans;
     x->x_sig1 = else_magic_inlet_connection((t_object *)x, x->x_glist, 0, &s_signal);
@@ -196,46 +196,46 @@ static void wt_dsp(t_wt *x, t_signal **sp){
     || (x->x_ch3 > 1 && x->x_ch3 != x->x_nchans)
     || (x->x_ch4 > 1 && x->x_ch4 != x->x_nchans)){
         dsp_add_zero(sp[4]->s_vec, x->x_nchans*x->x_n);
-        pd_error(x, "[wt~]: channel sizes mismatch");
+        pd_error(x, "[zwt~]: channel sizes mismatch");
         return;
     }
-    dsp_add(wt_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec,
+    dsp_add(zwt_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec,
             sp[2]->s_vec, sp[3]->s_vec, sp[4]->s_vec);
 }
 
-static void wt_midi(t_wt *x, t_floatarg f){
+static void zwt_midi(t_zwt *x, t_floatarg f){
     x->x_midi = (int)(f != 0);
 }
 
-static void wt_table(t_wt *x, t_symbol *s){
+static void zwt_table(t_zwt *x, t_symbol *s){
     buffer_setarray(x->x_buffer, s);
 }
 
-static void wt_slices(t_wt *x, t_floatarg f){
+static void zwt_slices(t_zwt *x, t_floatarg f){
     x->x_slices = f < 1 ? 1 : (int)f;
 }
 
-static void wt_none(t_wt *x){
+static void zwt_none(t_zwt *x){
     x->x_interp = 0;
 }
 
-static void wt_lin(t_wt *x){
+static void zwt_lin(t_zwt *x){
     x->x_interp = 1;
 }
 
-static void wt_cos(t_wt *x){
+static void zwt_cos(t_zwt *x){
     x->x_interp = 2;
 }
 
-static void wt_lagrange(t_wt *x){
+static void zwt_lagrange(t_zwt *x){
     x->x_interp = 3;
 }
 
-static void wt_spline(t_wt *x){
+static void zwt_spline(t_zwt *x){
     x->x_interp = 4;
 }
 
-static void wt_set(t_wt *x, t_symbol *s, int ac, t_atom *av){
+static void zwt_set(t_zwt *x, t_symbol *s, int ac, t_atom *av){
     x->x_ignore = s;
     if(ac != 2)
         return;
@@ -249,7 +249,7 @@ static void wt_set(t_wt *x, t_symbol *s, int ac, t_atom *av){
     x->x_freq_list[i] = f;
 }
 
-static void wt_list(t_wt *x, t_symbol *s, int ac, t_atom * av){
+static void zwt_list(t_zwt *x, t_symbol *s, int ac, t_atom * av){
     x->x_ignore = s;
     if(ac == 0)
         return;
@@ -261,11 +261,11 @@ static void wt_list(t_wt *x, t_symbol *s, int ac, t_atom * av){
         x->x_freq_list[i] = atom_getfloat(av+i);
 }
 
-static void wt_soft(t_wt *x, t_floatarg f){
+static void zwt_soft(t_zwt *x, t_floatarg f){
     x->x_soft = (int)(f != 0);
 }
 
-static void *wt_free(t_wt *x){
+static void *zwt_free(t_zwt *x){
     buffer_free(x->x_buffer);
     inlet_free(x->x_inlet_sync);
     inlet_free(x->x_inlet_phase);
@@ -277,8 +277,8 @@ static void *wt_free(t_wt *x){
     return(void *)x;
 }
 
-static void *wt_new(t_symbol *s, int ac, t_atom *av){
-    t_wt *x = (t_wt *)pd_new(wt_class);
+static void *zwt_new(t_symbol *s, int ac, t_atom *av){
+    t_zwt *x = (t_zwt *)pd_new(zwt_class);
     x->x_ignore = s;
     x->x_midi = x->x_soft = 0;
     x->x_dir = (t_int *)getbytes(sizeof(*x->x_dir));
@@ -297,22 +297,22 @@ static void *wt_new(t_symbol *s, int ac, t_atom *av){
             if(curarg == gensym("-none")){
                 if(nameset)
                     goto errstate;
-                wt_none(x), ac--, av++;
+                zwt_none(x), ac--, av++;
             }
             else if(curarg == gensym("-lin")){
                 if(nameset)
                     goto errstate;
-                wt_lin(x), ac--, av++;
+                zwt_lin(x), ac--, av++;
             }
             else if(curarg == gensym("-cos")){
                 if(nameset)
                     goto errstate;
-                wt_cos(x), ac--, av++;
+                zwt_cos(x), ac--, av++;
             }
             else if(curarg == gensym("-lagrange")){
                 if(nameset)
                     goto errstate;
-                wt_lagrange(x), ac--, av++;
+                zwt_lagrange(x), ac--, av++;
             }
             else if(curarg == gensym("-midi")){
                 ac--, av++;
@@ -416,25 +416,25 @@ static void *wt_new(t_symbol *s, int ac, t_atom *av){
     x->x_signalscalar = obj_findsignalscalar((t_object *)x, 1);
     return(x);
 errstate:
-    post("[wt~]: improper args");
+    post("[zwt~]: improper args");
     return(NULL);
 }
 
-void wt_tilde_setup(void){
-    wt_class = class_new(gensym("wt~"), (t_newmethod)wt_new, (t_method)wt_free,
-        sizeof(t_wt), CLASS_MULTICHANNEL, A_GIMME, 0);
-    class_addmethod(wt_class, nullfn, gensym("signal"), 0);
-    class_addmethod(wt_class, (t_method)wt_dsp, gensym("dsp"), A_CANT, 0);
-    class_addlist(wt_class, wt_list);
-    class_addmethod(wt_class, (t_method)wt_soft, gensym("soft"), A_DEFFLOAT, 0);
-    class_addmethod(wt_class, (t_method)wt_midi, gensym("midi"), A_DEFFLOAT, 0);
-    class_addmethod(wt_class, (t_method)wt_set, gensym("set"), A_GIMME, 0);
-    class_addmethod(wt_class, (t_method)wt_none, gensym("none"), 0);
-    class_addmethod(wt_class, (t_method)wt_lin, gensym("lin"), 0);
-    class_addmethod(wt_class, (t_method)wt_cos, gensym("cos"), 0);
-    class_addmethod(wt_class, (t_method)wt_lagrange, gensym("lagrange"), 0);
-    class_addmethod(wt_class, (t_method)wt_spline, gensym("spline"), 0);
-    class_addmethod(wt_class, (t_method)wt_table, gensym("table"), A_SYMBOL, 0);
-    class_addmethod(wt_class, (t_method)wt_slices, gensym("n"), A_FLOAT, 0);
-    class_sethelpsymbol(wt_class, gensym("wavetable~"));
+void zwt_tilde_setup(void){
+    zwt_class = class_new(gensym("zwt~"), (t_newmethod)zwt_new, (t_method)zwt_free,
+        sizeof(t_zwt), CLASS_MULTICHANNEL, A_GIMME, 0);
+    class_addmethod(zwt_class, nullfn, gensym("signal"), 0);
+    class_addmethod(zwt_class, (t_method)zwt_dsp, gensym("dsp"), A_CANT, 0);
+    class_addlist(zwt_class, zwt_list);
+    class_addmethod(zwt_class, (t_method)zwt_soft, gensym("soft"), A_DEFFLOAT, 0);
+    class_addmethod(zwt_class, (t_method)zwt_midi, gensym("midi"), A_DEFFLOAT, 0);
+    class_addmethod(zwt_class, (t_method)zwt_set, gensym("set"), A_GIMME, 0);
+    class_addmethod(zwt_class, (t_method)zwt_none, gensym("none"), 0);
+    class_addmethod(zwt_class, (t_method)zwt_lin, gensym("lin"), 0);
+    class_addmethod(zwt_class, (t_method)zwt_cos, gensym("cos"), 0);
+    class_addmethod(zwt_class, (t_method)zwt_lagrange, gensym("lagrange"), 0);
+    class_addmethod(zwt_class, (t_method)zwt_spline, gensym("spline"), 0);
+    class_addmethod(zwt_class, (t_method)zwt_table, gensym("table"), A_SYMBOL, 0);
+    class_addmethod(zwt_class, (t_method)zwt_slices, gensym("n"), A_FLOAT, 0);
+    class_sethelpsymbol(zwt_class, gensym("wavetable~"));
 }

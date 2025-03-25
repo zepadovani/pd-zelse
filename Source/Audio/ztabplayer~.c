@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include <stdlib.h>
 
-typedef struct _tabplayer{
+typedef struct _ztabplayer{
     t_object    x_obj;
     t_buffer   *x_buffer;
     t_glist    *x_glist;
@@ -47,42 +47,42 @@ typedef struct _tabplayer{
     t_outlet   *x_donelet;
 }t_play;
 
-static t_class *tabplayer_class;
+static t_class *ztabplayer_class;
 
-static void tabplayer_fade_check(t_play *x, t_floatarg f){
+static void ztabplayer_fade_check(t_play *x, t_floatarg f){
     x->x_fadesamp  = (unsigned long long)(f * x->x_array_sr_khz);
     if(x->x_fadesamp > (x->x_rangesamp / 2))
         x->x_fadesamp = (x->x_rangesamp / 2);
 }
 
-static void tabplayer_fade(t_play *x, t_floatarg f){
+static void ztabplayer_fade(t_play *x, t_floatarg f){
     x->x_fadems = f < 0 ? 0 : f;
-    tabplayer_fade_check(x, x->x_fadems);
+    ztabplayer_fade_check(x, x->x_fadems);
 }
 
-static void tabplayer_xfade(t_play *x, t_floatarg f){
+static void ztabplayer_xfade(t_play *x, t_floatarg f){
     x->x_xfade = f != 0;
 }
 
-static void tabplayer_range_check(t_play *x){
+static void ztabplayer_range_check(t_play *x){
     if(x->x_start > x->x_end){
         unsigned long long temp = x->x_start;
         x->x_start = x->x_end;
         x->x_end = temp;
     }
     x->x_rangesamp = x->x_end - x->x_start;
-    tabplayer_fade_check(x, x->x_fadems);
+    ztabplayer_fade_check(x, x->x_fadems);
 }
 
-static void tabplayer_range(t_play *x, t_floatarg f1, t_floatarg f2){
+static void ztabplayer_range(t_play *x, t_floatarg f1, t_floatarg f2){
     x->x_range_start = f1 < 0 ? 0 : f1 > 1 ? 1 : f1;
     x->x_range_end = f2 < 0 ? 0 : f2 > 1 ? 1 : f2;
     x->x_start = (unsigned long long)(x->x_range_start * x->x_npts);
     x->x_end = (unsigned long long)(x->x_range_end * x->x_npts);
-    tabplayer_range_check(x);
+    ztabplayer_range_check(x);
 }
 
-static unsigned long long tabplayer_ms2samp(t_play *x, t_floatarg f){
+static unsigned long long ztabplayer_ms2samp(t_play *x, t_floatarg f){
     unsigned long long samp = (unsigned long long)(f * x->x_array_sr_khz);
     if(samp > x->x_npts)
         samp = x->x_npts;
@@ -91,28 +91,28 @@ static unsigned long long tabplayer_ms2samp(t_play *x, t_floatarg f){
     return(samp);
 }
 
-static void tabplayer_start(t_play *x, t_floatarg f){
-    x->x_start = tabplayer_ms2samp(x, f);
-    tabplayer_range_check(x);
+static void ztabplayer_start(t_play *x, t_floatarg f){
+    x->x_start = ztabplayer_ms2samp(x, f);
+    ztabplayer_range_check(x);
 }
 
-static void tabplayer_end(t_play *x, t_floatarg f){
-    x->x_end = tabplayer_ms2samp(x, f);
-    tabplayer_range_check(x);
+static void ztabplayer_end(t_play *x, t_floatarg f){
+    x->x_end = ztabplayer_ms2samp(x, f);
+    ztabplayer_range_check(x);
 }
 
-static void tabplayer_reset(t_play *x){
+static void ztabplayer_reset(t_play *x){
     x->x_start = 0;
     x->x_end = x->x_rangesamp = x->x_npts;
-    tabplayer_fade_check(x, x->x_fadems);
+    ztabplayer_fade_check(x, x->x_fadems);
 }
 
-static void tabplayer_speed(t_play *x, t_floatarg f){
+static void ztabplayer_speed(t_play *x, t_floatarg f){
     x->x_rate = f / 100;
     x->x_isneg = x->x_rate < 0;
 }
 
-static void tabplayer_arraysr(t_play *x, t_floatarg f){
+static void ztabplayer_arraysr(t_play *x, t_floatarg f){
     float srkhz = f * 0.001;
     if(x->x_array_sr_khz == srkhz)
         return;
@@ -120,16 +120,16 @@ static void tabplayer_arraysr(t_play *x, t_floatarg f){
     if(x->x_array_sr_khz < 8)
         x->x_array_sr_khz = 8;
     x->x_sr_ratio = x->x_array_sr_khz/x->x_sr_khz;
-    x->x_start = tabplayer_ms2samp(x, x->x_start);
-    x->x_end = tabplayer_ms2samp(x, x->x_end);
-    tabplayer_range_check(x);
-    tabplayer_fade_check(x, x->x_fadems);
+    x->x_start = ztabplayer_ms2samp(x, x->x_start);
+    x->x_end = ztabplayer_ms2samp(x, x->x_end);
+    ztabplayer_range_check(x);
+    ztabplayer_fade_check(x, x->x_fadems);
 }
 
-static void tabplayer_set(t_play *x, t_symbol *s){
+static void ztabplayer_set(t_play *x, t_symbol *s){
     buffer_setarray(x->x_buffer, s);
     x->x_npts = x->x_buffer->c_npts;
-    tabplayer_range(x, x->x_range_start, x->x_range_end);
+    ztabplayer_range(x, x->x_range_start, x->x_range_end);
     char buf[MAXPDSTRING];
     snprintf(buf, MAXPDSTRING-1, "%s-sr", s->s_name);
     buf[MAXPDSTRING-1] = 0;
@@ -140,22 +140,22 @@ static void tabplayer_set(t_play *x, t_symbol *s){
     buf[MAXPDSTRING-1] = 0;
     t_float sr;
     if(!value_getfloat(gensym(buf), &sr))
-        tabplayer_arraysr(x, sr);
+        ztabplayer_arraysr(x, sr);
 }
 
-static void tabplayer_pos(t_play *x, t_floatarg f){
+static void ztabplayer_pos(t_play *x, t_floatarg f){
     x->x_position = 1;
     double position = f < 0 ? 0 : f > 1 ? 1 : (double)f;
     x->x_phase = position * x->x_rangesamp + x->x_start;
     x->x_playing = x->x_playnew = 1; // start playing
 }
 
-static void tabplayer_bang(t_play *x){
+static void ztabplayer_bang(t_play *x){
     x->x_position = 0;
     x->x_playing = x->x_playnew = 1; // start playing
 }
 
-static void tabplayer_play(t_play *x, t_symbol *s, int ac, t_atom *av){
+static void ztabplayer_play(t_play *x, t_symbol *s, int ac, t_atom *av){
     s = NULL;
     if(ac){ // args: start (ms) / end (ms), rate
         float stms = 0;
@@ -181,49 +181,49 @@ static void tabplayer_play(t_play *x, t_symbol *s, int ac, t_atom *av){
             };
             ac--, av++;
         };
-        x->x_start = tabplayer_ms2samp(x, stms);
-        x->x_end = tabplayer_ms2samp(x, endms);
-        tabplayer_range_check(x);
+        x->x_start = ztabplayer_ms2samp(x, stms);
+        x->x_end = ztabplayer_ms2samp(x, endms);
+        ztabplayer_range_check(x);
     }
-    tabplayer_bang(x);
+    ztabplayer_bang(x);
 }
 
-static void tabplayer_spline(t_play *x){
+static void ztabplayer_spline(t_play *x){
     x->x_interp = 0;
 }
 
-static void tabplayer_lagrange(t_play *x){
+static void ztabplayer_lagrange(t_play *x){
     x->x_interp = 1;
 }
 
-static void tabplayer_stop(t_play *x){
+static void ztabplayer_stop(t_play *x){
     if(x->x_playing){
         x->x_playing = x->x_playnew = 0;
         outlet_bang(x->x_donelet);
     };
 }
 
-static void tabplayer_float(t_play *x, t_floatarg f){
-    f > 0 ? tabplayer_bang(x) : tabplayer_stop(x);
+static void ztabplayer_float(t_play *x, t_floatarg f){
+    f > 0 ? ztabplayer_bang(x) : ztabplayer_stop(x);
 }
 
-static void tabplayer_pause(t_play *x){
+static void ztabplayer_pause(t_play *x){
     x->x_playing = 0;
 }
 
-static void tabplayer_resume(t_play *x){
+static void ztabplayer_resume(t_play *x){
     x->x_playing = 1;
 }
 
-static void tabplayer_loop(t_play *x, t_floatarg f){
+static void ztabplayer_loop(t_play *x, t_floatarg f){
     x->x_loop = f > 0 ? 1 : 0;
 }
 
-static void tabplayer_trigger(t_play *x, t_floatarg f){
+static void ztabplayer_trigger(t_play *x, t_floatarg f){
     x->x_trig_mode = f > 0 ? 1 : 0;
 }
 
-static double tabplayer_fade_gain(t_play *x, double phase){
+static double ztabplayer_fade_gain(t_play *x, double phase){
     double fadegain = 1;
     x->x_fading_in = x->x_fading_out = 0;
     if(x->x_isneg){
@@ -261,7 +261,7 @@ static double tabplayer_fade_gain(t_play *x, double phase){
     return(fadegain);
 }
 
-static double tabplayer_interp(t_play *x, int ch, double phase){
+static double ztabplayer_interp(t_play *x, int ch, double phase){
     double out = 0.;
     t_word **vectable = x->x_buffer->c_vectors; // ??
     t_word *vp = vectable[ch]; // ??
@@ -294,7 +294,7 @@ static double tabplayer_interp(t_play *x, int ch, double phase){
     return(out);
 }
 
-static t_int *tabplayer_perform(t_int *w){
+static t_int *ztabplayer_perform(t_int *w){
     t_play *x = (t_play *)(w[1]);
     t_buffer *buffer = x->x_buffer;
     int n = (int)(w[2]);
@@ -358,20 +358,20 @@ static t_int *tabplayer_perform(t_int *w){
                                 };
                             }
                         };
-                        output[i] = tabplayer_interp(x, ch, phase);
+                        output[i] = ztabplayer_interp(x, ch, phase);
                         if(x->x_fadesamp > 0){
-                            output[i] *= tabplayer_fade_gain(x, phase);
+                            output[i] *= ztabplayer_fade_gain(x, phase);
                             if(x->x_xfade && x->x_loop){
                                 if(x->x_isneg){
                                     if(x->x_fading_in){
                                         double xphase = phase - (double)(x->x_start) + (double)(x->x_end);
-                                        output[i] += (tabplayer_interp(x, ch, xphase) * cos(x->x_fade_point * HALF_PI));
+                                        output[i] += (ztabplayer_interp(x, ch, xphase) * cos(x->x_fade_point * HALF_PI));
                                     }
                                 }
                                 else{
                                     if(x->x_fading_out){
                                         double xphase = phase - (double)(x->x_end - x->x_fadesamp) + (double)(x->x_start - x->x_fadesamp);
-                                        output[i] += (tabplayer_interp(x, ch, xphase) * sin(x->x_fade_point * HALF_PI));
+                                        output[i] += (ztabplayer_interp(x, ch, xphase) * sin(x->x_fade_point * HALF_PI));
                                     }
                                 }
                             }
@@ -428,20 +428,20 @@ static t_int *tabplayer_perform(t_int *w){
                     };
                     for(ch = 0; ch < x->x_n_ch; ch++){ // get output
                         t_float *output = *(x->x_ovecs+ch);
-                        output[i] = tabplayer_interp(x, ch, phase);
+                        output[i] = ztabplayer_interp(x, ch, phase);
                         if(x->x_fadesamp > 0){
-                            output[i] *= tabplayer_fade_gain(x, phase);
+                            output[i] *= ztabplayer_fade_gain(x, phase);
                             if(x->x_xfade && x->x_loop){
                                 if(x->x_isneg){
                                     if(x->x_fading_in){
                                         double xphase = phase - (double)(x->x_start) + (double)(x->x_end);
-                                        output[i] += (tabplayer_interp(x, ch, xphase) * cos(x->x_fade_point * HALF_PI));
+                                        output[i] += (ztabplayer_interp(x, ch, xphase) * cos(x->x_fade_point * HALF_PI));
                                     }
                                 }
                                 else{
                                     if(x->x_fading_out){
                                         double xphase = phase - (double)(x->x_end - x->x_fadesamp) + (double)(x->x_start - x->x_fadesamp);
-                                        output[i] += (tabplayer_interp(x, ch, xphase) * sin(x->x_fade_point * HALF_PI));
+                                        output[i] += (ztabplayer_interp(x, ch, xphase) * sin(x->x_fade_point * HALF_PI));
                                     }
                                 }
                             }
@@ -465,7 +465,7 @@ static t_int *tabplayer_perform(t_int *w){
     return(w+3);
 }
 
-static void tabplayer_dsp(t_play *x, t_signal **sp){
+static void ztabplayer_dsp(t_play *x, t_signal **sp){
     buffer_checkdsp(x->x_buffer);
     unsigned long long npts = x->x_buffer->c_npts;
     x->x_hasfeeders = else_magic_inlet_connection((t_object *)x, x->x_glist, 0, &s_signal);
@@ -474,16 +474,16 @@ static void tabplayer_dsp(t_play *x, t_signal **sp){
         x->x_sr_ratio = (double)(x->x_array_sr_khz/(x->x_sr_khz = pdksr));
     if(npts != x->x_npts){
         x->x_npts = npts;
-        tabplayer_reset(x); // recalculate sample equivalents
+        ztabplayer_reset(x); // recalculate sample equivalents
     };
     t_signal **sigp = sp;
     x->x_ivec = (*sigp++)->s_vec;
     for(int i = 0; i < x->x_n_ch; i++) //input vectors first
         *(x->x_ovecs+i) = (*sigp++)->s_vec;
-    dsp_add(tabplayer_perform, 2, x, sp[0]->s_n);
+    dsp_add(ztabplayer_perform, 2, x, sp[0]->s_n);
 }
 
-static void *tabplayer_free(t_play *x){
+static void *ztabplayer_free(t_play *x){
     if(x->x_bindname)
         pd_unbind((t_pd *)x, x->x_bindname);
     buffer_free(x->x_buffer);
@@ -492,8 +492,8 @@ static void *tabplayer_free(t_play *x){
     return(void *)x;
 }
 
-static void *tabplayer_new(t_symbol * s, int ac, t_atom *av){
-    t_play *x = (t_play *)pd_new(tabplayer_class);
+static void *ztabplayer_new(t_symbol * s, int ac, t_atom *av){
+    t_play *x = (t_play *)pd_new(ztabplayer_class);
     t_symbol *arrname = x->x_bindname = NULL;
     t_float channels = 1;
     t_float fade = 0;
@@ -590,8 +590,8 @@ static void *tabplayer_new(t_symbol * s, int ac, t_atom *av){
         x->x_donelet = outlet_new(&x->x_obj, &s_bang);
         x->x_playing = 0;
         x->x_playnew = 0;
-        tabplayer_range(x, range_start, range_end);
-        tabplayer_fade(x, fade);
+        ztabplayer_range(x, range_start, range_end);
+        ztabplayer_fade(x, fade);
     }
     if(arrname){
         char buf[MAXPDSTRING];
@@ -604,36 +604,36 @@ static void *tabplayer_new(t_symbol * s, int ac, t_atom *av){
         if(!value_getfloat(gensym(buf), &vsr))
             sr = vsr;
     }
-    tabplayer_arraysr(x, sr);
+    ztabplayer_arraysr(x, sr);
     return(x);
     errstate:
-        pd_error(x, "[tabplayer~]: improper args");
+        pd_error(x, "[ztabplayer~]: improper args");
         return(NULL);
 }
 
-void tabplayer_tilde_setup(void){
-    tabplayer_class = class_new(gensym("tabplayer~"), (t_newmethod)tabplayer_new, (t_method)tabplayer_free,
+void ztabplayer_tilde_setup(void){
+    ztabplayer_class = class_new(gensym("ztabplayer~"), (t_newmethod)ztabplayer_new, (t_method)ztabplayer_free,
         sizeof(t_play), 0, A_GIMME, 0);
-    class_domainsignalin(tabplayer_class, -1);
-    class_addbang(tabplayer_class, tabplayer_bang);
-    class_addfloat(tabplayer_class, tabplayer_float);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_dsp, gensym("dsp"), A_CANT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_set, gensym("set"), A_SYMBOL, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_pos, gensym("pos"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_play, gensym("play"), A_GIMME, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_lagrange, gensym("lagrange"), 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_spline, gensym("spline"), 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_stop, gensym("stop"), 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_pause, gensym("pause"), 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_resume, gensym("resume"), 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_reset, gensym("reset"), 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_start, gensym("start"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_end, gensym("end"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_range, gensym("range"), A_FLOAT, A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_speed, gensym("speed"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_loop, gensym("loop"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_trigger, gensym("tr"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_fade, gensym("fade"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_xfade, gensym("xfade"), A_FLOAT, 0);
-    class_addmethod(tabplayer_class, (t_method)tabplayer_arraysr, gensym("sr"), A_FLOAT, 0);
+    class_domainsignalin(ztabplayer_class, -1);
+    class_addbang(ztabplayer_class, ztabplayer_bang);
+    class_addfloat(ztabplayer_class, ztabplayer_float);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_dsp, gensym("dsp"), A_CANT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_set, gensym("set"), A_SYMBOL, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_pos, gensym("pos"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_play, gensym("play"), A_GIMME, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_lagrange, gensym("lagrange"), 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_spline, gensym("spline"), 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_stop, gensym("stop"), 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_pause, gensym("pause"), 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_resume, gensym("resume"), 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_reset, gensym("reset"), 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_start, gensym("start"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_end, gensym("end"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_range, gensym("range"), A_FLOAT, A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_speed, gensym("speed"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_loop, gensym("loop"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_trigger, gensym("tr"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_fade, gensym("fade"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_xfade, gensym("xfade"), A_FLOAT, 0);
+    class_addmethod(ztabplayer_class, (t_method)ztabplayer_arraysr, gensym("sr"), A_FLOAT, 0);
 }

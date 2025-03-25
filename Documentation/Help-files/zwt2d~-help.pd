@@ -165,11 +165,11 @@
 #X msg 514 178 soft \$1;
 #X obj 514 148 tgl 19 0 empty empty empty 0 -8 0 10 #dfdfdf #000000 #000000 0 1;
 #X text 477 84 Soft sync is also possible with the '-soft' flag or the "soft" message \, where it alternates between positive and negative frequencies and sounds less harsh., f 58;
-#X obj 57 181 else/wt2d~ \$0-sine 0.25;
-#X obj 258 193 else/wt2d~ \$0-sine 0.25;
+#X obj 57 181 zelse/zwt2d~ \$0-sine 0.25;
+#X obj 258 193 zelse/zwt2d~ \$0-sine 0.25;
 #X obj 57 211 else/s2f~;
 #X obj 258 217 else/s2f~;
-#X obj 561 210 else/wt2d~ \$0-sine 200;
+#X obj 561 210 zelse/zwt2d~ \$0-sine 200;
 #X obj 291 164 else/float2imp~;
 #X connect 1 0 4 0;
 #X connect 4 0 31 1;
@@ -204,9 +204,9 @@
 #X floatatom 230 134 9 0 0 0 - - - 0;
 #X text 213 110 0;
 #X obj 230 158 else/float2sig~ 50;
-#X obj 75 149 else/wt2d~ \$0-saw 220;
-#X obj 169 186 else/wt2d~ \$0-saw 220;
-#X obj 121 417 else/wt2d~ \$0-saw 200;
+#X obj 75 149 zelse/zwt2d~ \$0-saw 220;
+#X obj 169 186 zelse/zwt2d~ \$0-saw 220;
+#X obj 121 417 zelse/zwt2d~ \$0-saw 200;
 #X connect 2 0 14 2;
 #X connect 7 0 6 0;
 #X connect 8 0 9 0;
@@ -232,7 +232,7 @@
 #X msg 362 126 spline;
 #X text 408 126 default;
 #X text 330 17 set different interpolation methods, f 36;
-#X obj 332 152 else/wt2d~ -none \$0-interp 50;
+#X obj 332 152 zelse/zwt2d~ -none \$0-interp 50;
 #X text 45 36 By default \, [wt2d~] uses the spline interpolation method but you can set it to linear \, cosine \, lagrange or no interpolation at all. For more details \, check the subsection 'interpolation' of chapter 28 (buffer) in the live electronics tutorial., f 39;
 #X obj 332 206 else/scope~ 200 100 10 3 128 -1 1 10 0 0 0 30 30 30 190 190 190 160 160 160 0 empty;
 #X connect 2 0 9 0;
@@ -277,8 +277,8 @@
 #X text 42 152 By default \, frequency input is in hertz \, but if you use the 'midi' message or '-midi' flag you can change it to MIDI pitch input \, where it is not really bound to the 0 to 127 range \, neither it has to be integers. This is just like using [mtof~].;
 #X text 38 31 The [wt2d~] object needs an array name in Pd to load the wavetable. You can also use [sample~] to load a wavefile into an array as this one used in this example and in the parent patch. The array name is the first argument.;
 #X text 451 30 Besides the first argument \, the "set" message followed by an array name sets an entire array to be used as a waveform. If no name is given or if you send a name that doesn't correspond to an exist array \, then the output is silent. Below we use [tabgen] to generate a wavetable. You can get more wavetable files -->, f 76;
-#X obj 120 330 else/wt2d~ -midi \$0-table 60;
-#X obj 530 293 else/wt2d~ 110;
+#X obj 120 330 zelse/zwt2d~ -midi \$0-table 60;
+#X obj 530 293 zelse/zwt2d~ 110;
 #X obj 469 216 else/initmess table \$0-saw;
 #X connect 0 0 20 0;
 #X connect 7 0 19 0;
@@ -292,8 +292,8 @@
 #X restore 437 167 pd basic;
 #X obj 201 148 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10 #dcdcdc #000000 #000000 0 256;
 #X obj 96 480 cnv 17 3 17 empty empty 3 5 9 0 16 #dcdcdc #9c9c9c 0;
-#X obj 24 244 else/wt~;
-#X obj 201 176 else/wt2d~ \$0-table 110;
+#X obj 24 244 zelse/zwt~;
+#X obj 201 176 zelse/zwt2d~ \$0-table 110;
 #X obj 96 501 cnv 17 3 17 empty empty 4 5 9 0 16 #dcdcdc #9c9c9c 0;
 #X text 103 600 -n <list>: sets number of x and y slices (default 1 \, 1), f 67;
 #N canvas 180 70 987 575 2d-scanning 0;
@@ -331,7 +331,7 @@
 #X obj 288 315 else/f2s~ 20;
 #X msg 77 272 n 4 1;
 #X msg 93 305 n 2 2;
-#X obj 61 350 else/wt2d~ -n 2 2 \$0-frames 220;
+#X obj 61 350 zelse/zwt2d~ -n 2 2 \$0-frames 220;
 #X text 446 468 |---------------- row 1 ----------------|;
 #X text 693 468 |---------------- row 2 ----------------|;
 #X text 505 60 With the '-n' flag or 'n' message you can set a number of slices to split the wavetable into. You need to give it 2 values \, the first is for the number of horizontal slices (or 'columns') and the second is for the number of vertical slices (or 'rows'). The total number of slices is the number of columns times the number of rows. In this example we initialize the object with 2 columns and 2 rows \, slicing it in 4 frames., f 64;
@@ -382,8 +382,8 @@
 #X msg 279 290 set 1 555;
 #X text 349 283 the set message sets a single frequency channel, f 24;
 #X obj 91 279 else/sine~;
-#X obj 39 303 else/wt2d~ \$0-sine;
-#X obj 236 337 else/wt2d~ -mc 440 660 \$0-sine;
+#X obj 39 303 zelse/zwt2d~ \$0-sine;
+#X obj 236 337 zelse/zwt2d~ -mc 440 660 \$0-sine;
 #X connect 1 0 13 0;
 #X connect 2 0 9 0;
 #X connect 4 0 15 0;

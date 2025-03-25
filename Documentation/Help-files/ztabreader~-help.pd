@@ -31,14 +31,14 @@
 #X coords 0 1 511 -1 300 200 1 0 0;
 #X restore 45 116 graph;
 #X msg 128 48 sin 1 0.5 1 2.3 0.25 1;
-#X obj 128 75 else/tabgen \$0-table;
+#X obj 128 75 zelse/ztabgen \$0-table;
 #X obj 128 23 loadbang;
 #X connect 2 0 3 0;
 #X connect 4 0 2 0;
 #X restore 101 179 pd table;
 #X text 128 284 set <symbol> - sets an entire array to be used as a waveform, f 62;
 #X obj 213 155 hsl 138 16 0 1 0 0 empty empty empty -2 -8 0 10 #dcdcdc #000000 #000000 0 1;
-#X obj 210 204 else/tabreader~ \$0-table;
+#X obj 210 204 zelse/ztabreader~ \$0-table;
 #X text 128 269 float/signal - sets index/phase, f 62;
 #X text 206 452 - table values;
 #X text 122 301 index <float> - non-0 sets to index mode, f 62;
@@ -49,7 +49,7 @@
 #X obj 126 149 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10 #dcdcdc #000000 #000000 0 256;
 #X obj 129 126 hsl 128 15 0 514 0 0 empty empty empty -2 -8 0 10 #dcdcdc #000000 #000000 0 1;
 #X obj 126 366 else/numbox~ 6 12 100 #c0c0c4 #440008 10 0 0 0;
-#X obj 126 337 else/tabreader~ -none \$0-table;
+#X obj 126 337 zelse/ztabreader~ -none \$0-table;
 #X msg 140 176 none;
 #X msg 150 197 lin;
 #X msg 160 217 cos;
@@ -87,7 +87,7 @@
 #X text 38 23 There's multi channel support (up to 64 channels)., f 61;
 #X text 38 41 In ELSE \, multichannel arrays follow a naming convention where the table name is preceded by the channel number (starting from zero) and "-" \, such as: "0-" \, "1-" \, "2-" \, "3-" \, and so on..., f 61;
 #X text 38 91 This happens \, for instance \, when you load a sample with the [sample~] object as in this example (but you can also crete arrays manually this way). You can then change and set the channel with the "channel" message. By default \, it loads "channel 1" \, but you can set a different channel with the 'ch' flag or 2nd argument (as in this example)., f 61;
-#X obj 133 271 else/tabreader~ stereo_\$0 2;
+#X obj 133 271 zelse/ztabreader~ stereo_\$0 2;
 #X connect 0 0 9 0;
 #X connect 1 0 4 0;
 #X connect 2 0 9 0;
@@ -98,7 +98,7 @@
 #X text 218 421 sets to hermite interpolation and tension/bias;
 #X text 69 88 [tabreader] accepts indexes from 0 to 1 by default and reads an array with different interpolation methods with multi channel support. There's no need to have guard points in the array as these are taken care of internally., f 63;
 #X text 26 208 see also:;
-#X obj 29 231 else/tabreader;
+#X obj 29 231 zelse/ztabreader;
 #N canvas 546 106 747 470 loop-mode 0;
 #X obj 137 195 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10 #dcdcdc #000000 #000000 0 256;
 #X obj 140 172 hsl 138 16 0 1 0 0 empty empty empty -2 -8 0 10 #dcdcdc #000000 #000000 0 1;
@@ -115,9 +115,9 @@
 #X obj 388 133 else/initmess set \$0-table, f 13;
 #X obj 137 256 else/numbox~ 6 10 100 #C0C0C4 #440008 10 0 0 0;
 #X obj 138 390 else/numbox~ 6 10 100 #C0C0C4 #440008 10 0 0 0;
-#X obj 137 223 else/tabreader~ -loop \$0-table;
-#X obj 138 357 else/tabreader~ -index -loop \$0-table;
-#X obj 482 184 else/tabreader~ -loop;
+#X obj 137 223 zelse/ztabreader~ -loop \$0-table;
+#X obj 138 357 zelse/ztabreader~ -index -loop \$0-table;
+#X obj 482 184 zelse/ztabreader~ -loop;
 #X text 403 24 If you connect a [phasor~] into [tabreader~] \, in loop mode \, it becomes a wavetable oscillator like [tabosc4~] or [else/wavetable~]. Note that besides the first argument \, the "set" message followed by an array name sets an array to be read., f 47;
 #X text 52 45 The buffer is considered to be circular in loop mode. When not in indexed mode \, if you reach "1" it is the same as going back to "0". If you're in indexed mode \, then the table index range is from 0 to the table size (512 in this example) if you're in loop mode. This way \, the table size index (512) is the same as the table start (0). You can set it to indexed mode with the 'index' flag or the 'index' message., f 48;
 #X connect 0 0 15 0;
@@ -141,7 +141,7 @@
 #X obj 153 123 hsl 138 16 0 511 0 0 empty empty empty -2 -8 0 10 #dcdcdc #000000 #000000 0 1;
 #X obj 78 121 tgl 16 0 empty empty empty 0 -8 0 10 #dfdfdf #000000 #000000 0 1;
 #X msg 78 145 index \$1;
-#X obj 150 174 else/tabreader~ -index \$0-table;
+#X obj 150 174 zelse/ztabreader~ -index \$0-table;
 #X obj 150 207 else/numbox~ 6 10 100 #C0C0C4 #440008 10 0 0 0;
 #X text 65 30 In indexed mode you have to feed the actual index number and it goes from zero to the table size minus 1 (0 to 511 in this example). You can set it to indexed mode with the 'index' flag or the 'index' message., f 47;
 #X connect 0 0 4 0;

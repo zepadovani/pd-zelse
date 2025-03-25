@@ -8,7 +8,7 @@
 
 #define MAXLEN 1024
 
-typedef struct _wt2d{
+typedef struct _zwt2d{
     t_object    x_obj;
     t_buffer   *x_buffer;
     double     *x_phase;
@@ -38,11 +38,11 @@ typedef struct _wt2d{
     t_glist    *x_glist; // object list
     t_float    *x_signalscalar; // right inlet's float field
     t_float     x_phase_sync_float; // float from magic
-}t_wt2d;
+}t_zwt2d;
 
-static t_class *wt2d_class;
+static t_class *zwt2d_class;
 
-static double wt2d_read(t_wt2d *x, double xpos, int frame, int size, t_word *vp){
+static double zwt2d_read(t_zwt2d *x, double xpos, int frame, int size, t_word *vp){
     double val = 0;
     if(frame >= x->x_nframes)
         return(val);
@@ -80,7 +80,7 @@ static double wt2d_read(t_wt2d *x, double xpos, int frame, int size, t_word *vp)
     return(val);
 }
 
-double wt2d_wrap_phase(double phase){
+double zwt2d_wrap_phase(double phase){
     while(phase >= 1)
         phase -= 1.;
     while(phase < 0)
@@ -88,8 +88,8 @@ double wt2d_wrap_phase(double phase){
     return(phase);
 }
 
-static t_int *wt2d_perform(t_int *w){
-    t_wt2d *x = (t_wt2d *)(w[1]);
+static t_int *zwt2d_perform(t_int *w){
+    t_zwt2d *x = (t_zwt2d *)(w[1]);
     t_float *in1 = (t_float *)(w[2]); // freq
     t_float *in2 = (t_float *)(w[3]); // sync
     t_float *in3 = (t_float *)(w[4]); // phase
@@ -140,7 +140,7 @@ static t_int *wt2d_perform(t_int *w){
                 }
             }
             double phase_offset = x->x_ch3 == 1 ? in3[i] : in3[j*n + i];
-            double wraped_phase = wt2d_wrap_phase(phase[j] + phase_offset);
+            double wraped_phase = zwt2d_wrap_phase(phase[j] + phase_offset);
             
             t_float output;
             if(vp){
@@ -149,7 +149,7 @@ static t_int *wt2d_perform(t_int *w){
                 else{
                     double pos = wraped_phase * (double)npts_frame;
                     if(x->x_nframes == 1)
-                        output = wt2d_read(x, pos, 0, npts_frame, vp);
+                        output = zwt2d_read(x, pos, 0, npts_frame, vp);
                     else{
                         if(xpos < 0)
                             xpos = 0;
@@ -170,13 +170,13 @@ static t_int *wt2d_perform(t_int *w){
                         xfadey = ypos - (double)yframe;
                         
                         frame = xframe + yframe * (x->x_rows);
-                        frame1 = wt2d_read(x, pos, frame, npts_frame, vp);
-                        frame2 = wt2d_read(x, pos, frame+1, npts_frame, vp);
+                        frame1 = zwt2d_read(x, pos, frame, npts_frame, vp);
+                        frame2 = zwt2d_read(x, pos, frame+1, npts_frame, vp);
                         row1 = frame1 * (1-xfadex) + frame2 * xfadex;
                         
                         frame = xframe + (yframe + 1) * (x->x_rows);
-                        frame1 = wt2d_read(x, pos, frame, npts_frame, vp);
-                        frame2 = wt2d_read(x, pos, frame+1, npts_frame, vp);
+                        frame1 = zwt2d_read(x, pos, frame, npts_frame, vp);
+                        frame2 = zwt2d_read(x, pos, frame+1, npts_frame, vp);
                         row2 = frame1 * (1-xfadex) + frame2 * xfadex;
                         
                         output = row1 * (1-xfadey) + row2 * xfadey;
@@ -189,7 +189,7 @@ static t_int *wt2d_perform(t_int *w){
             
             out[j*n + i] = output;
             
-            phase[j] = wt2d_wrap_phase(phase[j] + step);
+            phase[j] = zwt2d_wrap_phase(phase[j] + step);
         }
     }
     x->x_phase = phase;
@@ -197,10 +197,10 @@ static t_int *wt2d_perform(t_int *w){
     return(w+8);
 }
 
-static void wt2d_dsp(t_wt2d *x, t_signal **sp){
+static void zwt2d_dsp(t_zwt2d *x, t_signal **sp){
     buffer_checkdsp(x->x_buffer);
     if(x->x_buffer->c_playable && x->x_buffer->c_npts < 4)
-        pd_error(x, "[wt2d~]: table too small, minimum size is 4");
+        pd_error(x, "[zwt2d~]: table too small, minimum size is 4");
     x->x_n = sp[0]->s_n, x->x_sr_rec = 1.0 / (double)sp[0]->s_sr;
     x->x_ch2 = sp[1]->s_nchans, x->x_ch3 = sp[2]->s_nchans;
     x->x_ch4 = sp[3]->s_nchans, x->x_ch5 = sp[4]->s_nchans;
@@ -220,48 +220,48 @@ static void wt2d_dsp(t_wt2d *x, t_signal **sp){
     || (x->x_ch4 > 1 && x->x_ch4 != x->x_nchans)
     || (x->x_ch5 > 1 && x->x_ch5 != x->x_nchans)){
         dsp_add_zero(sp[5]->s_vec, x->x_nchans*x->x_n);
-        pd_error(x, "[wt2d~]: channel sizes mismatch");
+        pd_error(x, "[zwt2d~]: channel sizes mismatch");
         return;
     }
-    dsp_add(wt2d_perform, 7, x, sp[0]->s_vec, sp[1]->s_vec,
+    dsp_add(zwt2d_perform, 7, x, sp[0]->s_vec, sp[1]->s_vec,
         sp[2]->s_vec, sp[3]->s_vec, sp[4]->s_vec, sp[5]->s_vec);
 }
 
-static void wt2d_midi(t_wt2d *x, t_floatarg f){
+static void zwt2d_midi(t_zwt2d *x, t_floatarg f){
     x->x_midi = (int)(f != 0);
 }
 
-static void wt2d_slices(t_wt2d *x, t_floatarg f1, t_floatarg f2){
+static void zwt2d_slices(t_zwt2d *x, t_floatarg f1, t_floatarg f2){
     x->x_columns = f1 < 1 ? 1 : (int)f1;
     x->x_rows = f1 < 1 ? 1 : (int)f2;
     x->x_nframes = x->x_columns * x->x_rows;
 }
 
-static void wt2d_table(t_wt2d *x, t_symbol *s){
+static void zwt2d_table(t_zwt2d *x, t_symbol *s){
     buffer_setarray(x->x_buffer, s);
 }
 
-static void wt2d_none(t_wt2d *x){
+static void zwt2d_none(t_zwt2d *x){
     x->x_interp = 0;
 }
 
-static void wt2d_lin(t_wt2d *x){
+static void zwt2d_lin(t_zwt2d *x){
     x->x_interp = 1;
 }
 
-static void wt2d_cos(t_wt2d *x){
+static void zwt2d_cos(t_zwt2d *x){
     x->x_interp = 2;
 }
 
-static void wt2d_lagrange(t_wt2d *x){
+static void zwt2d_lagrange(t_zwt2d *x){
     x->x_interp = 3;
 }
 
-static void wt2d_spline(t_wt2d *x){
+static void zwt2d_spline(t_zwt2d *x){
     x->x_interp = 4;
 }
 
-static void wt2d_set(t_wt2d *x, t_symbol *s, int ac, t_atom *av){
+static void zwt2d_set(t_zwt2d *x, t_symbol *s, int ac, t_atom *av){
     x->x_ignore = s;
     if(ac != 2)
         return;
@@ -275,7 +275,7 @@ static void wt2d_set(t_wt2d *x, t_symbol *s, int ac, t_atom *av){
     x->x_freq_list[i] = f;
 }
 
-static void wt2d_list(t_wt2d *x, t_symbol *s, int ac, t_atom * av){
+static void zwt2d_list(t_zwt2d *x, t_symbol *s, int ac, t_atom * av){
     x->x_ignore = s;
     if(ac == 0)
         return;
@@ -287,11 +287,11 @@ static void wt2d_list(t_wt2d *x, t_symbol *s, int ac, t_atom * av){
         x->x_freq_list[i] = atom_getfloat(av+i);
 }
 
-static void wt2d_soft(t_wt2d *x, t_floatarg f){
+static void zwt2d_soft(t_zwt2d *x, t_floatarg f){
     x->x_soft = (int)(f != 0);
 }
 
-static void *wt2d_free(t_wt2d *x){
+static void *zwt2d_free(t_zwt2d *x){
     buffer_free(x->x_buffer);
     inlet_free(x->x_inlet_sync);
     inlet_free(x->x_inlet_phase);
@@ -304,8 +304,8 @@ static void *wt2d_free(t_wt2d *x){
     return(void *)x;
 }
 
-static void *wt2d_new(t_symbol *s, int ac, t_atom *av){
-    t_wt2d *x = (t_wt2d *)pd_new(wt2d_class);
+static void *zwt2d_new(t_symbol *s, int ac, t_atom *av){
+    t_zwt2d *x = (t_zwt2d *)pd_new(zwt2d_class);
     x->x_ignore = s;
     x->x_midi = x->x_soft = 0;
     x->x_dir = (t_int *)getbytes(sizeof(*x->x_dir));
@@ -325,22 +325,22 @@ static void *wt2d_new(t_symbol *s, int ac, t_atom *av){
             if(curarg == gensym("-none")){
                 if(nameset)
                     goto errstate;
-                wt2d_none(x), ac--, av++;
+                zwt2d_none(x), ac--, av++;
             }
             else if(curarg == gensym("-lin")){
                 if(nameset)
                     goto errstate;
-                wt2d_lin(x), ac--, av++;
+                zwt2d_lin(x), ac--, av++;
             }
             else if(curarg == gensym("-cos")){
                 if(nameset)
                     goto errstate;
-                wt2d_cos(x), ac--, av++;
+                zwt2d_cos(x), ac--, av++;
             }
             else if(curarg == gensym("-lagrange")){
                 if(nameset)
                     goto errstate;
-                wt2d_lagrange(x), ac--, av++;
+                zwt2d_lagrange(x), ac--, av++;
             }
             else if(curarg == gensym("-midi")){
                 ac--, av++;
@@ -457,24 +457,24 @@ static void *wt2d_new(t_symbol *s, int ac, t_atom *av){
     x->x_signalscalar = obj_findsignalscalar((t_object *)x, 1);
     return(x);
 errstate:
-    post("[wt2d~]: improper args");
+    post("[zwt2d~]: improper args");
     return(NULL);
 }
 
-void wt2d_tilde_setup(void){
-    wt2d_class = class_new(gensym("wt2d~"), (t_newmethod)wt2d_new, (t_method)wt2d_free,
-        sizeof(t_wt2d), CLASS_MULTICHANNEL, A_GIMME, 0);
-    class_addmethod(wt2d_class, nullfn, gensym("signal"), 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_dsp, gensym("dsp"), A_CANT, 0);
-    class_addlist(wt2d_class, wt2d_list);
-    class_addmethod(wt2d_class, (t_method)wt2d_soft, gensym("soft"), A_DEFFLOAT, 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_midi, gensym("midi"), A_DEFFLOAT, 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_set, gensym("set"), A_GIMME, 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_none, gensym("none"), 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_lin, gensym("lin"), 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_cos, gensym("cos"), 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_lagrange, gensym("lagrange"), 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_spline, gensym("spline"), 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_table, gensym("table"), A_SYMBOL, 0);
-    class_addmethod(wt2d_class, (t_method)wt2d_slices, gensym("n"), A_FLOAT, 0);
+void zwt2d_tilde_setup(void){
+    zwt2d_class = class_new(gensym("zwt2d~"), (t_newmethod)zwt2d_new, (t_method)zwt2d_free,
+        sizeof(t_zwt2d), CLASS_MULTICHANNEL, A_GIMME, 0);
+    class_addmethod(zwt2d_class, nullfn, gensym("signal"), 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_dsp, gensym("dsp"), A_CANT, 0);
+    class_addlist(zwt2d_class, zwt2d_list);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_soft, gensym("soft"), A_DEFFLOAT, 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_midi, gensym("midi"), A_DEFFLOAT, 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_set, gensym("set"), A_GIMME, 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_none, gensym("none"), 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_lin, gensym("lin"), 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_cos, gensym("cos"), 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_lagrange, gensym("lagrange"), 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_spline, gensym("spline"), 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_table, gensym("table"), A_SYMBOL, 0);
+    class_addmethod(zwt2d_class, (t_method)zwt2d_slices, gensym("n"), A_FLOAT, 0);
 }
