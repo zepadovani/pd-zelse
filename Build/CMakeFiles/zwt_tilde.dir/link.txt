@@ -1,1 +1,0 @@
-/usr/bin/cc -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/zwt_tilde.dir/link.d -shared -Wl,-soname,"zwt~.l_amd64" -o "zelse/zwt~.l_amd64" "CMakeFiles/zwt_tilde.dir/Source/Extra/Aliases/zwt~.c.o"  -Wl,-rpath,"\$ORIGIN:/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/zelse" zelse/libzelse_shared.so
