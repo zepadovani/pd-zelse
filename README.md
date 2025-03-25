@@ -8,6 +8,15 @@ A solução (maluca), portanto, foi criar versões dos objetos que preciso com u
 
 25/03/2025
 
+# IMPORTANT
+
+This library is temporary and includes only a very small portion of the altered 'else' objects.
+
+The idea is that the objects, without the strange nomenclature I created, will be integrated into 'else' (a Pull Request has already been made). For now, I am using it this way **because plugdata, having 'else' integrated, does not allow extending it without conflicts**, and I urgently need a portable solution for it.
+
+The (crazy) solution, therefore, was to create versions of the objects I need with a 'z' in front. The same thing for the entire library (the libshared that is loaded), which is called 'zelse'. Such changes were necessary in the objects and in buffer.c.
+
+2025, 25th March
 
 
 --------------------------------------------------------------------------
