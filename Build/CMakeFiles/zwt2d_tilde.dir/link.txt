@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/zwt2d_tilde.dir/link.d -shared -Wl,-soname,"zwt2d~.l_amd64" -o "zelse/zwt2d~.l_amd64" "CMakeFiles/zwt2d_tilde.dir/Source/Audio/zwt2d~.c.o"  -Wl,-rpath,"\$ORIGIN:/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/zelse" zelse/libzelse_shared.so

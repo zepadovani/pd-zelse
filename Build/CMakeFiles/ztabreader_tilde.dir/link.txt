@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/ztabreader_tilde.dir/link.d -shared -Wl,-soname,"ztabreader~.l_amd64" -o "zelse/ztabreader~.l_amd64" "CMakeFiles/ztabreader_tilde.dir/Source/Audio/ztabreader~.c.o"  -Wl,-rpath,"\$ORIGIN:/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/zelse" zelse/libzelse_shared.so

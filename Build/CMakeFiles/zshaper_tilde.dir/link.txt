@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/zshaper_tilde.dir/link.d -shared -Wl,-soname,"zshaper~.l_amd64" -o "zelse/zshaper~.l_amd64" "CMakeFiles/zshaper_tilde.dir/Source/Audio/zshaper~.c.o"  -Wl,-rpath,"\$ORIGIN:/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/zelse" zelse/libzelse_shared.so

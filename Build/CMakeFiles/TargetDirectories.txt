@@ -1,0 +1,11 @@
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/zelse_shared.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/zshaper_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/ztabplayer_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/ztabreader_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/ztabwriter_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/zwavetable_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/zwt2d_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/ztabreader.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/zwt_tilde.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/edit_cache.dir
+/home/padovani/data/gdrive/meus_dev/pd/pd-zelse/Build/CMakeFiles/rebuild_cache.dir
