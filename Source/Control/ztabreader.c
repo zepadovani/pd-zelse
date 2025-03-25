@@ -1,11 +1,11 @@
 // porres
 
 #include <m_pd.h>
-#include <buffer.h>
+#include <zbuffer.h>
 
 typedef struct _ztabreader{
     t_object  x_obj;
-    t_buffer *x_buffer;
+    t_zbuffer *x_zbuffer;
     int       x_i_mode;
     int       x_ch;
     int       x_idx;
@@ -51,12 +51,12 @@ static void ztabreader_set_hermite(t_ztabreader *x, t_floatarg tension, t_floata
 }
 
 static void ztabreader_set(t_ztabreader *x, t_symbol *s){
-    buffer_setarray(x->x_buffer, s);
+    zbuffer_setarray(x->x_zbuffer, s);
 }
 
 static void ztabreader_float(t_ztabreader *x, t_float f){
-    t_buffer *buf = x->x_buffer;
-    buffer_validate(buf, 1); // 2nd arg for error posting
+    t_zbuffer *buf = x->x_zbuffer;
+    zbuffer_validate(buf, 1); // 2nd arg for error posting
     t_word *vp = buf->c_vectors[0];
     int npts = x->x_loop ? buf->c_npts : buf->c_npts - 1;
     if(vp){
@@ -120,7 +120,7 @@ static void ztabreader_float(t_ztabreader *x, t_float f){
 
 static void ztabreader_channel(t_ztabreader *x, t_floatarg f){
     x->x_ch = f < 1 ? 1 : (f > 64 ? 64 : (int) f);
-    buffer_getchannel(x->x_buffer, x->x_ch, 1);
+    zbuffer_getchannel(x->x_zbuffer, x->x_ch, 1);
 }
 
 static void ztabreader_index(t_ztabreader *x, t_floatarg f){
@@ -133,7 +133,7 @@ static void ztabreader_loop(t_ztabreader *x, t_floatarg f){
 
 static void ztabreader_free(t_ztabreader *x){
     outlet_free(x->x_outlet);
-    buffer_free(x->x_buffer);
+    zbuffer_free(x->x_zbuffer);
 }
 
 static void *ztabreader_new(t_symbol *s, int ac, t_atom * av){
@@ -227,16 +227,16 @@ static void *ztabreader_new(t_symbol *s, int ac, t_atom * av){
         }
     };
     x->x_ch = (ch < 0 ? 1 : ch > 64 ? 64 : ch);
-    // init buffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
+    // init zbuffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
     if(x->x_namemode == 0) {
-        x->x_buffer = buffer_init((t_class *)x, name, 1, x->x_ch, 0); /// new arg added 0: <ch>-<arrayname> mode / 1: <arrayname>-<ch> mode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        x->x_zbuffer = zbuffer_init((t_class *)x, name, 1, x->x_ch, 0); /// new arg added 0: <ch>-<arrayname> mode / 1: <arrayname>-<ch> mode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
     else if(x->x_namemode == 1){
-        x->x_buffer = buffer_init((t_class *)x, name, 1, x->x_ch, 1); 
+        x->x_zbuffer = zbuffer_init((t_class *)x, name, 1, x->x_ch, 1); 
     }      
-    buffer_getchannel(x->x_buffer, x->x_ch, 1);
-    buffer_setminsize(x->x_buffer, 2);
-    buffer_playcheck(x->x_buffer);
+    zbuffer_getchannel(x->x_zbuffer, x->x_ch, 1);
+    zbuffer_setminsize(x->x_zbuffer, 2);
+    zbuffer_playcheck(x->x_zbuffer);
     x->x_outlet = outlet_new(&x->x_obj, &s_float);
     return(x);
     errstate:

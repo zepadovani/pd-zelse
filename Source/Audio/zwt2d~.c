@@ -4,13 +4,13 @@
 #include <math.h>
 #include <stdlib.h>
 #include "magic.h"
-#include "buffer.h"
+#include "zbuffer.h"
 
 #define MAXLEN 1024
 
 typedef struct _zwt2d{
     t_object    x_obj;
-    t_buffer   *x_buffer;
+    t_zbuffer   *x_zbuffer;
     double     *x_phase;
     int         x_nchans;
     t_int       x_n;
@@ -96,7 +96,7 @@ static t_int *zwt2d_perform(t_int *w){
     t_float *in4 = (t_float *)(w[5]); // y
     t_float *in5 = (t_float *)(w[6]); // z
     t_float *out = (t_float *)(w[7]);
-    t_word *vp = x->x_buffer->c_vectors[0];
+    t_word *vp = x->x_zbuffer->c_vectors[0];
     t_int *dir = x->x_dir;
     double *phase = x->x_phase;
 // Magic Start
@@ -112,7 +112,7 @@ static t_int *zwt2d_perform(t_int *w){
         }
     }
 // Magic End
-    int npts_frame = (t_int)(x->x_buffer->c_npts) / (x->x_nframes >= 1 ? x->x_nframes : 1);
+    int npts_frame = (t_int)(x->x_zbuffer->c_npts) / (x->x_nframes >= 1 ? x->x_nframes : 1);
     for(int j = 0; j < x->x_nchans; j++){
         for(int i = 0, n = x->x_n; i < n; i++){
             double hz = x->x_sig1 ? in1[j*n + i] : x->x_freq_list[j];
@@ -198,8 +198,8 @@ static t_int *zwt2d_perform(t_int *w){
 }
 
 static void zwt2d_dsp(t_zwt2d *x, t_signal **sp){
-    buffer_checkdsp(x->x_buffer);
-    if(x->x_buffer->c_playable && x->x_buffer->c_npts < 4)
+    zbuffer_checkdsp(x->x_zbuffer);
+    if(x->x_zbuffer->c_playable && x->x_zbuffer->c_npts < 4)
         pd_error(x, "[zwt2d~]: table too small, minimum size is 4");
     x->x_n = sp[0]->s_n, x->x_sr_rec = 1.0 / (double)sp[0]->s_sr;
     x->x_ch2 = sp[1]->s_nchans, x->x_ch3 = sp[2]->s_nchans;
@@ -238,7 +238,7 @@ static void zwt2d_slices(t_zwt2d *x, t_floatarg f1, t_floatarg f2){
 }
 
 static void zwt2d_table(t_zwt2d *x, t_symbol *s){
-    buffer_setarray(x->x_buffer, s);
+    zbuffer_setarray(x->x_zbuffer, s);
 }
 
 static void zwt2d_none(t_zwt2d *x){
@@ -292,7 +292,7 @@ static void zwt2d_soft(t_zwt2d *x, t_floatarg f){
 }
 
 static void *zwt2d_free(t_zwt2d *x){
-    buffer_free(x->x_buffer);
+    zbuffer_free(x->x_zbuffer);
     inlet_free(x->x_inlet_sync);
     inlet_free(x->x_inlet_phase);
     inlet_free(x->x_inlet_xfadeX);
@@ -441,7 +441,7 @@ static void *zwt2d_new(t_symbol *s, int ac, t_atom *av){
         }
     }
     x->x_nframes = x->x_columns * x->x_rows;
-    x->x_buffer = buffer_init((t_class *)x, name, 1, 0, 0); // just added fifth argument: see buffer.c / buffer.h
+    x->x_zbuffer = zbuffer_init((t_class *)x, name, 1, 0, 0); // just added fifth argument: see zbuffer.c / zbuffer.h
     x->x_phase[0] = phaseoff < 0 || phaseoff > 1 ? 0 : phaseoff;
     x->x_inlet_sync = inlet_new((t_object *)x, (t_pd *)x, &s_signal, &s_signal);
         pd_float((t_pd *)x->x_inlet_sync, 0);

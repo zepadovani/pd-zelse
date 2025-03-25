@@ -2,13 +2,13 @@
 
 #include <m_pd.h>
 #include <m_imp.h>
-#include <buffer.h>
+#include <zbuffer.h>
 
 #define DRAW_PERIOD     500.        // draw period
 
 typedef struct _ztabwriter{
     t_object            x_obj;
-    t_buffer           *x_buffer;
+    t_zbuffer           *x_zbuffer;
     t_float             x_f; // dummy input float
     t_float            *x_gate_vec; // gate signal vector
     t_float             x_last_gate;
@@ -39,33 +39,33 @@ typedef struct _ztabwriter{
 static t_class *ztabwriter_class;
 
 static void ztabwriter_draw(t_ztabwriter *x){
-    if(x->x_buffer != NULL){
-        if(x->x_buffer->c_playable)
-            buffer_redraw(x->x_buffer);
+    if(x->x_zbuffer != NULL){
+        if(x->x_zbuffer->c_playable)
+            zbuffer_redraw(x->x_zbuffer);
     }
 }
 
 static void ztabwriter_tick(t_ztabwriter *x){ // Redraw!
     double timesince = clock_gettimesince(x->x_clocklasttick);
     if(timesince >= DRAW_PERIOD){
-        buffer_redraw(x->x_buffer);
+        zbuffer_redraw(x->x_zbuffer);
         x->x_clocklasttick = clock_getlogicaltime();
     }
 }
 
 static void ztabwriter_set(t_ztabwriter *x, t_symbol *s){
-    if(x->x_buffer != NULL)
-        buffer_setarray(x->x_buffer, s);
+    if(x->x_zbuffer != NULL)
+        zbuffer_setarray(x->x_zbuffer, s);
     else{
-        // init buffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
+        // init zbuffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
         if(x->x_namemode == 0) {
-            x->x_buffer = buffer_init((t_class *)x, s, x->x_numchans, 0, 0); /// new arg added 0: <ch>-<arrayname> mode / 1: <arrayname>-<ch> mode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            x->x_zbuffer = zbuffer_init((t_class *)x, s, x->x_numchans, 0, 0); /// new arg added 0: <ch>-<arrayname> mode / 1: <arrayname>-<ch> mode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
         else if(x->x_namemode == 1){
-            x->x_buffer = buffer_init((t_class *)x, s, x->x_numchans, 0, 1); 
+            x->x_zbuffer = zbuffer_init((t_class *)x, s, x->x_numchans, 0, 1); 
         }    
-        // x->x_buffer = buffer_init((t_class *)x, s, x->x_numchans, 0);
-        buffer_setminsize(x->x_buffer, 2);
+        // x->x_zbuffer = zbuffer_init((t_class *)x, s, x->x_numchans, 0);
+        zbuffer_setminsize(x->x_zbuffer, 2);
     }
 }
 
@@ -83,20 +83,20 @@ static void ztabwriter_loop(t_ztabwriter *x, t_floatarg f){
 }
 
 static void ztabwriter_rec(t_ztabwriter *x){
-    if(x->x_buffer != NULL){
+    if(x->x_zbuffer != NULL){
         if(!x->x_continue)
             x->x_phase = 0.;
         x->x_isrunning = x->x_newrun = 1;
-        buffer_redraw(x->x_buffer);
+        zbuffer_redraw(x->x_zbuffer);
     }
 }
 
 static void ztabwriter_stop(t_ztabwriter *x){
-    if(x->x_buffer != NULL){
+    if(x->x_zbuffer != NULL){
         if(!x->x_continue)
             x->x_phase = 0.;
         x->x_isrunning = 0;
-        buffer_redraw(x->x_buffer);
+        zbuffer_redraw(x->x_zbuffer);
     }
 }
 
@@ -106,15 +106,15 @@ static void ztabwriter_float(t_ztabwriter *x, t_floatarg f){
 
 static t_int *ztabwriter_perform(t_int *w){
     t_ztabwriter *x = (t_ztabwriter *)(w[1]);
-    if(x->x_buffer == NULL)
+    if(x->x_zbuffer == NULL)
         return(w+2);
-    t_buffer *c = x->x_buffer;
+    t_zbuffer *c = x->x_zbuffer;
     t_int nch = c->c_numchans;
     t_float *gatein = x->x_gate_vec;
     t_float *out = x->x_out;
     t_int i, j, bang = 0;
     unsigned long long phase, range;
-    buffer_validate(c, 0);
+    zbuffer_validate(c, 0);
     t_float last_gate = x->x_last_gate;
     clock_delay(x->x_clock, 0);
     for(i = 0; i < x->x_n; i++){
@@ -163,7 +163,7 @@ static t_int *ztabwriter_perform(t_int *w){
                         phase = start;
                     else{ // stop
                         x->x_isrunning = 0;
-                        buffer_redraw(x->x_buffer);
+                        zbuffer_redraw(x->x_zbuffer);
                     };
                 };
                 if(phase < start)
@@ -191,8 +191,8 @@ static t_int *ztabwriter_perform(t_int *w){
 }
 
 static void ztabwriter_dsp(t_ztabwriter *x, t_signal **sp){
-    if(x->x_buffer != NULL)
-        buffer_checkdsp(x->x_buffer);
+    if(x->x_zbuffer != NULL)
+        zbuffer_checkdsp(x->x_zbuffer);
     x->x_ksr = sp[0]->s_sr * 0.001;
     x->x_n = sp[0]->s_n;
     t_signal **sigp = sp;
@@ -204,8 +204,8 @@ static void ztabwriter_dsp(t_ztabwriter *x, t_signal **sp){
 }
 
 static void ztabwriter_free(t_ztabwriter *x){
-    if(x->x_buffer != NULL)
-        buffer_free(x->x_buffer);
+    if(x->x_zbuffer != NULL)
+        zbuffer_free(x->x_zbuffer);
     outlet_free(x->x_outlet_bang);
     freebytes(x->x_ins, x->x_numchans * sizeof(*x->x_ins));
     if(x->x_clock)
@@ -241,12 +241,12 @@ static void ztabwriter_end(t_ztabwriter *x, t_float end){
 }
 
 static void ztabwriter_range(t_ztabwriter *x, t_floatarg f1, t_floatarg f2){
-    if(!x->x_buffer) return;
+    if(!x->x_zbuffer) return;
     
     f1 = f1 < 0 ? 0 : f1 > 1 ? 1 : f1;
     f2 = f2 < 0 ? 0 : f2 > 1 ? 1 : f2;
-    x->x_startindex = (unsigned long long)(f1 * x->x_buffer->c_npts);
-    x->x_endindex = (unsigned long long)(f2 * x->x_buffer->c_npts);
+    x->x_startindex = (unsigned long long)(f1 * x->x_zbuffer->c_npts);
+    x->x_endindex = (unsigned long long)(f2 * x->x_zbuffer->c_npts);
     x->x_whole_array = x->x_endindex < 0;
     ztabwriter_range_check(x);
 }
@@ -267,7 +267,7 @@ static void *ztabwriter_new(t_symbol *s, int ac, t_atom *av){
     t_int nameset = 0;     // flag if name is set
     t_int argn = 0;
     t_symbol *name = NULL;
-    x->x_buffer = NULL;
+    x->x_zbuffer = NULL;
     // new var to store namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
     x->x_namemode = 0; 
     while(ac > 0){
@@ -345,16 +345,16 @@ static void *ztabwriter_new(t_symbol *s, int ac, t_atom *av){
     };
     int chn_n = (int)numchan > 64 ? 64 : (int)numchan;
     if(name != NULL){
-        // init buffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
+        // init zbuffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
         if(x->x_namemode == 0) {
-            x->x_buffer = buffer_init((t_class *)x, name, chn_n, 0, 0); /// new arg added 0: <ch>-<arrayname> mode / 1: <arrayname>-<ch> mode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            x->x_zbuffer = zbuffer_init((t_class *)x, name, chn_n, 0, 0); /// new arg added 0: <ch>-<arrayname> mode / 1: <arrayname>-<ch> mode !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
         else if(x->x_namemode == 1){
-            x->x_buffer = buffer_init((t_class *)x, name, chn_n, 0, 1); 
+            x->x_zbuffer = zbuffer_init((t_class *)x, name, chn_n, 0, 1); 
         }  
-        t_buffer *c = x->x_buffer;
+        t_zbuffer *c = x->x_zbuffer;
         if(c) // set channels and array sizes
-            buffer_setminsize(x->x_buffer, 2);
+            zbuffer_setminsize(x->x_zbuffer, 2);
     }
     x->x_numchans = chn_n;
     x->x_ins = getbytes(x->x_numchans * sizeof(*x->x_ins)); // allocate in vectors

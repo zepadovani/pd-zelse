@@ -1,7 +1,7 @@
 // porres
 
 #include <m_pd.h>
-#include <buffer.h>
+#include <zbuffer.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -22,11 +22,11 @@ typedef struct _zshaper{
     double      x_a;
     double      x_xnm1;
     double      x_ynm1;
-    t_buffer   *x_buffer;
+    t_zbuffer   *x_zbuffer;
 }t_zshaper;
 
 static void zshaper_set(t_zshaper *x, t_symbol *s){
-    buffer_setarray(x->x_buffer, s);
+    zbuffer_setarray(x->x_zbuffer, s);
     x->x_arrayset = 1;
 }
 
@@ -93,8 +93,8 @@ static t_int *zshaper_perform(t_int *w){
     double xnm1 = x->x_xnm1;
     double ynm1 = x->x_ynm1;
     int n = (int)(w[4]);
-    t_word *buf = (t_word *)x->x_buffer->c_vectors[0];
-    double maxidx = (double)(x->x_buffer->c_npts - 1);
+    t_word *buf = (t_word *)x->x_zbuffer->c_vectors[0];
+    double maxidx = (double)(x->x_zbuffer->c_npts - 1);
     while(n--){
         double yn, xn;
         float output = 0;
@@ -103,7 +103,7 @@ static t_int *zshaper_perform(t_int *w){
             ph++;
         while(ph >= 1)
             ph--;
-        if(x->x_arrayset && x->x_buffer->c_playable){
+        if(x->x_arrayset && x->x_zbuffer->c_playable){
             double pos = ph * maxidx;
             int ndx = (int)pos;
             double frac = pos - (double)ndx;
@@ -143,12 +143,12 @@ static void zshaper_dsp(t_zshaper *x, t_signal **sp){
         x->x_sr = sp[0]->s_sr;
         x->x_a = 1 - (5*TWO_PI/(double)x->x_sr);
     }
-    buffer_checkdsp(x->x_buffer);
+    zbuffer_checkdsp(x->x_zbuffer);
     dsp_add(zshaper_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n);
 }
 
 static void zshaper_free(t_zshaper *x){
-    buffer_free(x->x_buffer);
+    zbuffer_free(x->x_zbuffer);
     free(x->x_cheby);
     free(x->x_coef);
 }
@@ -215,7 +215,7 @@ static void *zshaper_new(t_symbol *s, int ac, t_atom *av){
                 goto errstate;
         }
     };
-    x->x_buffer = buffer_init((t_class *)x, name, 1, 0, 0); // just added fifth argument: see buffer.c / buffer.h
+    x->x_zbuffer = zbuffer_init((t_class *)x, name, 1, 0, 0); // just added fifth argument: see zbuffer.c / zbuffer.h
     if(!x->x_arrayset)
         update_cheby_func(x);
     outlet_new(&x->x_obj, gensym("signal"));

@@ -1,3 +1,17 @@
+# IMPORTANTE
+
+Essa bibloteca é provisória. A ideia é que os objetos todos sejam integrados à else.
+Por enquanto estou usando dessa maneira porque o plugdata, por ter o else integrado, não permite estendê-lo sem confiltos.
+A solução (maluca) foi criar versões dos objetos que preciso com um 'z' na frente.
+A mesma coisa para a biblioteca toda, que chama 'zelse'
+
+
+
+
+
+
+
+
 --------------------------------------------------------------------------
 
 # ELSE - EL Locus Solus' Externals

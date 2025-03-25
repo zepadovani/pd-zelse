@@ -1,6 +1,6 @@
 
 #include <m_pd.h>
-#include "buffer.h"
+#include "zbuffer.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -192,7 +192,7 @@ double read_partab(double phase){
 
 
 // on failure *bufsize is not modified
-t_word *buffer_get(t_buffer *c, t_symbol * name, int *bufsize, int indsp, int complain){
+t_word *zbuffer_get(t_zbuffer *c, t_symbol * name, int *bufsize, int indsp, int complain){
 //in dsp = used in dsp,
     if(name && name != &s_){
         t_garray *ap = (t_garray *)pd_findbyclass(name, garray_class);
@@ -216,30 +216,30 @@ t_word *buffer_get(t_buffer *c, t_symbol * name, int *bufsize, int indsp, int co
 }
 
 //making peek~ work with channel number choosing, assuming 1-indexed
-void buffer_getchannel(t_buffer *c, int chan_num, int complain){
+void zbuffer_getchannel(t_zbuffer *c, int chan_num, int complain){
     int chan_idx;
     char buf[MAXPDSTRING];
     t_symbol * curname; //name of the current channel we want
     int vsz = c->c_npts;  
     t_word *retvec = NULL;//pointer to the corresponding channel to return
     //1-indexed bounds checking
-    chan_num = chan_num < 1 ? 1 : (chan_num > buffer_MAXCHANS ? buffer_MAXCHANS : chan_num);
+    chan_num = chan_num < 1 ? 1 : (chan_num > zbuffer_MAXCHANS ? zbuffer_MAXCHANS : chan_num);
     c->c_single = chan_num;
     //convert to 0-indexing, separate steps and diff variable for sanity's sake
     chan_idx = chan_num - 1;
-    //making the buffer channel name string we'll be looking for
+    //making the zbuffer channel name string we'll be looking for
     if(c->c_bufname != &s_){
         if(chan_idx == 0){
             //if channel idx is 0, check for just plain bufname as well
             //since checking for 0-bufname as well, don't complain here
-            retvec = buffer_get(c, c->c_bufname, &vsz, 1, 0);
+            retvec = zbuffer_get(c, c->c_bufname, &vsz, 1, 0);
             if(retvec){
                 c->c_vectors[0] = retvec;
                 if (vsz < c->c_npts) c->c_npts = vsz;
                 return;
             };
         };
-        // Now setting buffername according to bufnamemode: 0 - <ch>-<bufname> [default/legacy], 1 - <bufname>-<ch> 
+        // Now setting zbuffername according to bufnamemode: 0 - <ch>-<bufname> [default/legacy], 1 - <bufname>-<ch> 
         if(c->c_bufnamemode == 0){
             sprintf(buf, "%d-%s", chan_idx, c->c_bufname->s_name);
         }
@@ -247,7 +247,7 @@ void buffer_getchannel(t_buffer *c, int chan_num, int complain){
             sprintf(buf, "%s-%d", c->c_bufname->s_name, chan_idx);
         };
         curname =  gensym(buf);
-        retvec = buffer_get(c, curname, &vsz, 1, complain);
+        retvec = zbuffer_get(c, curname, &vsz, 1, complain);
         //if channel found and less than c_npts, reset c_npts
         if (vsz < c->c_npts) c->c_npts = vsz;
         c->c_vectors[0] = retvec;
@@ -256,7 +256,7 @@ void buffer_getchannel(t_buffer *c, int chan_num, int complain){
 
 }
 
-void buffer_bug(char *fmt, ...){ // from loud.c
+void zbuffer_bug(char *fmt, ...){ // from loud.c
     char buf[MAXPDSTRING];
     va_list ap;
     va_start(ap, fmt);
@@ -269,24 +269,24 @@ void buffer_bug(char *fmt, ...){ // from loud.c
     bug("%s", buf);
 }
 
-void buffer_clear(t_buffer *c){
+void zbuffer_clear(t_zbuffer *c){
     c->c_npts = 0;
     memset(c->c_vectors, 0, c->c_numchans * sizeof(*c->c_vectors));
 }
 
-void buffer_redraw(t_buffer *c){
+void zbuffer_redraw(t_zbuffer *c){
     if(!c->c_single){
         if(c->c_numchans <= 1 && c->c_bufname != &s_){
             t_garray *ap = (t_garray *)pd_findbyclass(c->c_bufname, garray_class);
             if (ap) garray_redraw(ap);
-            else if (c->c_vectors[0]) buffer_bug("buffer_redraw 1");
+            else if (c->c_vectors[0]) zbuffer_bug("zbuffer_redraw 1");
         }
         else if (c->c_numchans > 1){
             int ch = c->c_numchans;
             while (ch--){
                 t_garray *ap = (t_garray *)pd_findbyclass(c->c_channames[ch], garray_class);
                 if (ap) garray_redraw(ap);
-                else if (c->c_vectors[ch]) buffer_bug("buffer_redraw 2");
+                else if (c->c_vectors[ch]) zbuffer_bug("zbuffer_redraw 2");
             }
         };
     }
@@ -295,10 +295,10 @@ void buffer_redraw(t_buffer *c){
         char buf[MAXPDSTRING];
         t_symbol * curname; //name of the current channel we want
         int chan_num = c->c_single; //1-indexed channel number
-        chan_num = chan_num < 1 ? 1 : (chan_num > buffer_MAXCHANS ? buffer_MAXCHANS : chan_num);
+        chan_num = chan_num < 1 ? 1 : (chan_num > zbuffer_MAXCHANS ? zbuffer_MAXCHANS : chan_num);
          //convert to 0-indexing, separate steps and diff variable for sanity's sake
         chan_idx = chan_num - 1;
-        //making the buffer channel name string we'll be looking for
+        //making the zbuffer channel name string we'll be looking for
         if(c->c_bufname != &s_){
             if(chan_idx == 0){
                 //if channel idx is 0, check for just plain bufname as well
@@ -308,7 +308,7 @@ void buffer_redraw(t_buffer *c){
                     return;
                 };
             };
-            // Now setting buffername according to bufnamemode: 0 - <ch>-<bufname> [default/legacy], 1 - <bufname>-<ch>
+            // Now setting zbuffername according to bufnamemode: 0 - <ch>-<bufname> [default/legacy], 1 - <bufname>-<ch>
             if(c->c_bufnamemode == 0){
                 sprintf(buf, "%d-%s", chan_idx, c->c_bufname->s_name);
             }
@@ -321,20 +321,20 @@ void buffer_redraw(t_buffer *c){
                 garray_redraw(ap);
             // not really sure what the specific message is for, just copied single channel one - DK
             else if (c->c_vectors[0])
-                buffer_bug("buffer_redraw 1");
+                zbuffer_bug("zbuffer_redraw 1");
 
         };
     };
 }
 
-void buffer_validate(t_buffer *c, int complain){
-    buffer_clear(c);
+void zbuffer_validate(t_zbuffer *c, int complain){
+    zbuffer_clear(c);
     c->c_npts = SHARED_INT_MAX;
     if(!c->c_single){
         if (c->c_numchans <= 1 && c->c_bufname != &s_){
-            c->c_vectors[0] = buffer_get(c, c->c_bufname, &c->c_npts, 1, 0);
+            c->c_vectors[0] = zbuffer_get(c, c->c_bufname, &c->c_npts, 1, 0);
             if(!c->c_vectors[0]){ // check for 0-bufname if bufname array isn't found
-                c->c_vectors[0] = buffer_get(c, c->c_channames[0], &c->c_npts, 1, 0);
+                c->c_vectors[0] = zbuffer_get(c, c->c_channames[0], &c->c_npts, 1, 0);
                 //if neither found, post about it if complain
                 if(!c->c_vectors[0] && complain)
                     pd_error(c->c_owner, "no such array '%s' (or '0-%s')",
@@ -346,30 +346,30 @@ void buffer_validate(t_buffer *c, int complain){
             for (ch = 0; ch < c->c_numchans ; ch++){
                 int vsz = c->c_npts;  /* ignore missing arrays */
                 // only complain if can't find first channel (ch = 0)
-                c->c_vectors[ch] = buffer_get(c, c->c_channames[ch], &vsz, 1, !ch && complain);
+                c->c_vectors[ch] = zbuffer_get(c, c->c_channames[ch], &vsz, 1, !ch && complain);
                 if(vsz < c->c_npts)
                     c->c_npts = vsz;
             };
         };
     }
     else
-        buffer_getchannel(c, c->c_single, complain);
+        zbuffer_getchannel(c, c->c_single, complain);
     if(c->c_npts == SHARED_INT_MAX)
         c->c_npts = 0;
 }
 
-void buffer_playcheck(t_buffer *c){
+void zbuffer_playcheck(t_zbuffer *c){
     c->c_playable = (!c->c_disabled && c->c_npts >= c->c_minsize);
 }
 
-void buffer_initarray(t_buffer *c, t_symbol *name, int complain){
+void zbuffer_initarray(t_zbuffer *c, t_symbol *name, int complain){
     if(name){ // setting array names
         c->c_bufname = name;
         if(c->c_numchans >= 1){
             char buf[MAXPDSTRING];
             int ch;
             for(ch = 0; ch < c->c_numchans; ch++){
-                // Now setting buffername according to bufnamemode: 0 - <ch>-<bufname> [default/legacy], 1 - <bufname>-<ch>
+                // Now setting zbuffername according to bufnamemode: 0 - <ch>-<bufname> [default/legacy], 1 - <bufname>-<ch>
                 if(c->c_bufnamemode == 0){
                     sprintf(buf, "%d-%s", ch, c->c_bufname->s_name);
                 }
@@ -379,43 +379,43 @@ void buffer_initarray(t_buffer *c, t_symbol *name, int complain){
                 c->c_channames[ch] = gensym(buf);
             };
         };
-        buffer_validate(c, complain);
+        zbuffer_validate(c, complain);
     };
-    buffer_playcheck(c);
+    zbuffer_playcheck(c);
 }
 
-//wrapper around buffer_initarray so you don't have to pass the complain flag each time
-void buffer_setarray(t_buffer *c, t_symbol *name){
-   buffer_initarray(c, name, 1); 
+//wrapper around zbuffer_initarray so you don't have to pass the complain flag each time
+void zbuffer_setarray(t_zbuffer *c, t_symbol *name){
+   zbuffer_initarray(c, name, 1); 
 }
 
-void buffer_setminsize(t_buffer *c, int i){
+void zbuffer_setminsize(t_zbuffer *c, int i){
     c->c_minsize = i;
 }
 
-void buffer_checkdsp(t_buffer *c){
-    buffer_validate(c, 1);
-    buffer_playcheck(c);
+void zbuffer_checkdsp(t_zbuffer *c){
+    zbuffer_validate(c, 1);
+    zbuffer_playcheck(c);
 
 }
 
-void buffer_free(t_buffer *c){
+void zbuffer_free(t_zbuffer *c){
     if (c->c_vectors)
         freebytes(c->c_vectors, c->c_numchans * sizeof(*c->c_vectors));
     if (c->c_channames)
         freebytes(c->c_channames, c->c_numchans * sizeof(*c->c_channames));
-    freebytes(c, sizeof(t_buffer));
+    freebytes(c, sizeof(t_zbuffer));
 }
 
 /* If nauxsigs is positive, then the number of signals is nchannels + nauxsigs;
    otherwise the channels are not used as signals, and the number of signals is
-   nsigs -- provided that nsigs is positive -- or, if it is not, then an buffer
+   nsigs -- provided that nsigs is positive -- or, if it is not, then an zbuffer
    is not used in dsp (peek~). */
 
 // Added the fifth argument to set namemode: 0 = <ch>-<arrayname> [default/legacy], 1 = <arrayname>-<ch>
-void *buffer_init(t_class *owner, t_symbol *bufname, int numchans, int singlemode, int bufnamemode){
-// name of buffer (multichan usu, or not) and the number of channels associated with buffer
-    t_buffer *c = (t_buffer *)getbytes(sizeof(t_buffer));
+void *zbuffer_init(t_class *owner, t_symbol *bufname, int numchans, int singlemode, int bufnamemode){
+// name of zbuffer (multichan usu, or not) and the number of channels associated with zbuffer
+    t_zbuffer *c = (t_zbuffer *)getbytes(sizeof(t_zbuffer));
     t_word **vectors;
     t_symbol **channames = 0;
     if(!bufname)
@@ -427,7 +427,7 @@ void *buffer_init(t_class *owner, t_symbol *bufname, int numchans, int singlemod
         bufnamemode = 0; // default: <ch>-<arrayname>
     // setting namemode
     c->c_bufnamemode = bufnamemode;
-    numchans = (numchans < 1 || singlemode) ? 1 : (numchans > buffer_MAXCHANS ? buffer_MAXCHANS : numchans);
+    numchans = (numchans < 1 || singlemode) ? 1 : (numchans > zbuffer_MAXCHANS ? zbuffer_MAXCHANS : numchans);
     if(!(vectors = (t_word **)getbytes(numchans* sizeof(*vectors))))
 		return(0);
 	if(!(channames = (t_symbol **)getbytes(numchans * sizeof(*channames)))){
@@ -444,11 +444,11 @@ void *buffer_init(t_class *owner, t_symbol *bufname, int numchans, int singlemod
     c->c_minsize = 1;
     c->c_numchans = numchans;
     if(bufname != &s_)
-        buffer_initarray(c, bufname, 0);
+        zbuffer_initarray(c, bufname, 0);
     return(c);
 }
 
-void buffer_enable(t_buffer *c, t_floatarg f){
+void zbuffer_enable(t_zbuffer *c, t_floatarg f){
     c->c_disabled = (f == 0);
-    buffer_playcheck(c);
+    zbuffer_playcheck(c);
 }

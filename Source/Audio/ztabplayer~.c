@@ -2,12 +2,12 @@
 
 #include <m_pd.h>
 #include "magic.h"
-#include "buffer.h"
+#include "zbuffer.h"
 #include <stdlib.h>
 
 typedef struct _ztabplayer{
     t_object    x_obj;
-    t_buffer   *x_buffer;
+    t_zbuffer   *x_zbuffer;
     t_glist    *x_glist;
     t_symbol   *x_bindname;
     int         x_hasfeeders;       // if there's a signal coming in the main inlet
@@ -127,8 +127,8 @@ static void ztabplayer_arraysr(t_play *x, t_floatarg f){
 }
 
 static void ztabplayer_set(t_play *x, t_symbol *s){
-    buffer_setarray(x->x_buffer, s);
-    x->x_npts = x->x_buffer->c_npts;
+    zbuffer_setarray(x->x_zbuffer, s);
+    x->x_npts = x->x_zbuffer->c_npts;
     ztabplayer_range(x, x->x_range_start, x->x_range_end);
     char buf[MAXPDSTRING];
     snprintf(buf, MAXPDSTRING-1, "%s-sr", s->s_name);
@@ -263,7 +263,7 @@ static double ztabplayer_fade_gain(t_play *x, double phase){
 
 static double ztabplayer_interp(t_play *x, int ch, double phase){
     double out = 0.;
-    t_word **vectable = x->x_buffer->c_vectors; // ??
+    t_word **vectable = x->x_zbuffer->c_vectors; // ??
     t_word *vp = vectable[ch]; // ??
     if(vp){
         float f;
@@ -296,12 +296,12 @@ static double ztabplayer_interp(t_play *x, int ch, double phase){
 
 static t_int *ztabplayer_perform(t_int *w){
     t_play *x = (t_play *)(w[1]);
-    t_buffer *buffer = x->x_buffer;
+    t_zbuffer *zbuffer = x->x_zbuffer;
     int n = (int)(w[2]);
     int ch, i;
     t_float *xin = x->x_ivec;
     float last_sig_input = x->x_lastin;
-    if(buffer->c_playable){
+    if(zbuffer->c_playable){
         if(x->x_hasfeeders){ // signal input present
             for(i = 0; i < n; i++){
                 float sig_input = *xin++;
@@ -466,8 +466,8 @@ static t_int *ztabplayer_perform(t_int *w){
 }
 
 static void ztabplayer_dsp(t_play *x, t_signal **sp){
-    buffer_checkdsp(x->x_buffer);
-    unsigned long long npts = x->x_buffer->c_npts;
+    zbuffer_checkdsp(x->x_zbuffer);
+    unsigned long long npts = x->x_zbuffer->c_npts;
     x->x_hasfeeders = else_magic_inlet_connection((t_object *)x, x->x_glist, 0, &s_signal);
     t_float pdksr = sp[0]->s_sr * 0.001;
     if(x->x_sr_khz != pdksr)
@@ -486,7 +486,7 @@ static void ztabplayer_dsp(t_play *x, t_signal **sp){
 static void *ztabplayer_free(t_play *x){
     if(x->x_bindname)
         pd_unbind((t_pd *)x, x->x_bindname);
-    buffer_free(x->x_buffer);
+    zbuffer_free(x->x_zbuffer);
     freebytes(x->x_ovecs, x->x_n_ch * sizeof(*x->x_ovecs));
     outlet_free(x->x_donelet);
     return(void *)x;
@@ -573,16 +573,16 @@ static void *ztabplayer_new(t_symbol * s, int ac, t_atom *av){
     int chn_n = (int)channels > 64 ? 64 : (int)channels;
     x->x_glist = canvas_getcurrent();
     x->x_hasfeeders = 0;
-    // init buffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
+    // init zbuffer according to namemode: 0 = <ch>-<arrayname>, 1 = <arrayname>-<ch>
     if(x->x_namemode == 0) {
-        x->x_buffer = buffer_init((t_class *)x, arrname, chn_n, 0, 0); 
+        x->x_zbuffer = zbuffer_init((t_class *)x, arrname, chn_n, 0, 0); 
     }
     else if(x->x_namemode == 1){
-        x->x_buffer = buffer_init((t_class *)x, arrname, chn_n, 0, 1); 
+        x->x_zbuffer = zbuffer_init((t_class *)x, arrname, chn_n, 0, 1); 
     }        
-    if(x->x_buffer){
-        int ch = x->x_buffer->c_numchans;
-        x->x_npts = x->x_buffer->c_npts;
+    if(x->x_zbuffer){
+        int ch = x->x_zbuffer->c_numchans;
+        x->x_npts = x->x_zbuffer->c_npts;
         x->x_n_ch = ch;
         x->x_ovecs = getbytes(x->x_n_ch * sizeof(*x->x_ovecs));
         while(ch--)
