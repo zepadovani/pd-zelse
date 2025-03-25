@@ -82,7 +82,7 @@ endforeach()
 # target_link_libraries(pdlink_tilde PUBLIC link opus)
 # target_include_directories(pdlink_tilde PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Source/Shared/libsamplerate ${CMAKE_CURRENT_SOURCE_DIR}/Source/Shared/opus)
 
-set(pdf_help "${CMAKE_CURRENT_SOURCE_DIR}/Documentation/README.pdf")
+# set(pdf_help "${CMAKE_CURRENT_SOURCE_DIR}/Documentation/README.pdf")
 file(GLOB help_files "${CMAKE_CURRENT_SOURCE_DIR}/Documentation/Help-files/*")
 file(GLOB extra_files
     ${CMAKE_CURRENT_SOURCE_DIR}/Documentation/Extra-files/*
