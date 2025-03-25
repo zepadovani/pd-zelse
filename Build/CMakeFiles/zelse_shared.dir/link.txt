@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/zelse_shared.dir/link.d -shared -Wl,-soname,libzelse_shared.so -o zelse/libzelse_shared.so CMakeFiles/zelse_shared.dir/Source/Shared/magic.c.o CMakeFiles/zelse_shared.dir/Source/Shared/zbuffer.c.o  -Wl,-rpath,"\$ORIGIN"
