@@ -2,7 +2,7 @@
 
 Essa bibloteca é provisória e inclui apenas uma parte muito pequena dos objetos da else alterados.
 
-A ideia é que os objetos, sem a nomenclatura estranha que criei, sejam integrados à else (Pull Request já foi feito). Por enquanto estou usando dessa maneira **porque o plugdata, por ter o else integrado, não permite estendê-lo sem confiltos** e tenho urgência em ter uma solução portável a ele.
+A ideia é que os objetos, sem a nomenclatura estranha que criei, sejam integrados à else (Pull Request já foi feito, https://github.com/porres/pd-else/pull/2419). Por enquanto estou usando dessa maneira **porque o plugdata, por ter o else integrado, não permite estendê-lo sem confiltos** e tenho urgência em ter uma solução portável a ele.
 
 A solução (maluca), portanto, foi criar versões dos objetos que preciso com um 'z' na frente. A mesma coisa para a biblioteca toda (o libshared que é carregado), que chama 'zelse'. Foram necessárias mudanças assim nos objetos e no buffer.c.
 
@@ -12,7 +12,7 @@ A solução (maluca), portanto, foi criar versões dos objetos que preciso com u
 
 This library is temporary and includes only a very small portion of the altered 'else' objects.
 
-The idea is that the objects, without the strange nomenclature I created, will be integrated into 'else' (a Pull Request has already been made). For now, I am using it this way **because plugdata, having 'else' integrated, does not allow extending it without conflicts**, and I urgently need a portable solution for it.
+The idea is that the objects, without the strange nomenclature I created, will be integrated into 'else' (a Pull Request has already been made, https://github.com/porres/pd-else/pull/2419). For now, I am using it this way **because plugdata, having 'else' integrated, does not allow extending it without conflicts**, and I urgently need a portable solution for it.
 
 The (crazy) solution, therefore, was to create versions of the objects I need with a 'z' in front. The same thing for the entire library (the libshared that is loaded), which is called 'zelse'. Such changes were necessary in the objects and in buffer.c.
 
