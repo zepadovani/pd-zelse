@@ -1,0 +1,153 @@
+name: C/C++ CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["master", "CI"]
+  pull_request:
+    branches: ["master", "CI"]
+
+env:
+  BUILD_TYPE: Release
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+
+jobs:
+  # ===============================================================
+  Linux-Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache-linux
+
+      - name: Downloads pd-Sources
+        shell: bash
+        run: |
+          curl -L -o pure-data.zip https://api.github.com/repos/pure-data/pure-data/zipball/refs/tags/0.55-0
+          unzip pure-data.zip
+          rm pure-data.zip
+          mv pure-data-* pure-data
+
+      - name: Configure pd-zelse
+        run: |
+          cmake -BBuild -DPD_PATH=${{github.workspace}}/pure-data -DCMAKE_C_COMPILER_LAUNCHER="ccache" -DCMAKE_CXX_COMPILER_LAUNCHER="ccache"
+
+      - name: Build pd-zelse
+        run: |
+          cmake --build Build
+
+      - name: Upload Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: zelse-linux
+          path: ./Build/zelse
+
+  # ===============================================================
+  macOS-Build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache-macos
+
+      - name: Downloads pd sources
+        shell: bash
+        run: |
+          curl -L -o pure-data.zip https://api.github.com/repos/pure-data/pure-data/zipball/refs/tags/0.55-0
+          unzip pure-data.zip
+          rm pure-data.zip
+          mv pure-data-* pure-data
+
+      - name: Configure pd-zelse
+        run: |
+          cmake -BBuild -DPD_PATH=${{github.workspace}}/pure-data -DCMAKE_C_COMPILER_LAUNCHER="ccache" -DCMAKE_CXX_COMPILER_LAUNCHER="ccache"
+
+      - name: Build pd-zelse
+        run: |
+          cmake --build Build
+
+      - name: Upload Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: zelse-macos
+          path: ./Build/zelse
+
+  # ===============================================================
+
+  Windows-Build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: make mingw-w64-x86_64-gcc mingw64/mingw-w64-x86_64-cmake mingw64/mingw-w64-x86_64-ccache
+          cache: true
+
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: D:/ccache
+          key: ccache-windows-${{ github.run_id }}
+          restore-keys: |
+            ccache-windows-${{ github.sha }}
+            ccache-windows-
+
+      - name: Get Pd
+        shell: bash
+        run: |
+          curl -L -o pure-data.zip http://msp.ucsd.edu/Software/pd-0.55-0.msw.zip
+          unzip pure-data.zip
+          rm pure-data.zip
+          mv pd-0.55-0 pd
+
+      - name: Configure pd-zelse
+        shell: msys2 {0}
+        run: |
+          cmake -GNinja -BBuild -DPD_PATH=./pd -DCMAKE_C_COMPILER_LAUNCHER="ccache" -DCMAKE_CXX_COMPILER_LAUNCHER="ccache"
+
+      - name: Build pd-zelse
+        shell: msys2 {0}
+        run: |
+          export CCACHE_COMPRESS=1
+          export CCACHE_COMPRESSLEVEL=6
+          export CCACHE_MAXSIZE=1G
+          export CCACHE_DIR=D:/ccache
+          cmake --build Build
+          ccache -s
+          rm -rf ./Build/zelse/*.a
+        env:
+          CCACHE_COMPRESS: "1"
+          CCACHE_COMPRESSLEVEL: "6"
+          CCACHE_MAXSIZE: "1G"
+          CCACHE_DIR: D:/ccache
+
+      - name: Save build cache
+        uses: actions/cache/save@v4
+        with:
+          path: D:/ccache
+          key: ccache-windows-${{ github.run_id }}
+
+      - name: Upload Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: zelse-windows
+          path: ./Build/zelse
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: [Windows-Build, macOS-Build, Linux-Build]
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: zelse
